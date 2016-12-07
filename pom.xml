@@ -34,7 +34,7 @@
 
     <!-- MODULES -->
     <modules>
-        <module>acntech-common-testing</module>
+        <module>acntech-test-tools</module>
     </modules>
 
     <dependencyManagement>

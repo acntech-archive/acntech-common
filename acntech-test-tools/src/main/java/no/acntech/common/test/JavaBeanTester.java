@@ -43,7 +43,7 @@ public final class JavaBeanTester {
 
     public static <T> void test(final Class<T> clazz, final String... skipTheseFields) throws IntrospectionException {
 
-        List<GetterSetter> gettersAndSetters = TestUtils.findGettersAndSetters(clazz, skipTheseFields);
+        List<GetterSetter> gettersAndSetters = TestReflectionUtils.findGettersAndSetters(clazz, skipTheseFields);
 
         for (GetterSetter getterSetter : gettersAndSetters) {
 
@@ -54,7 +54,7 @@ public final class JavaBeanTester {
             try {
                 final Object expectedType = createType(getter.getReturnType());
 
-                T bean = TestUtils.createBean(clazz);
+                T bean = TestReflectionUtils.createBean(clazz);
 
                 setter.invoke(bean, expectedType);
 

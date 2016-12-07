@@ -18,7 +18,7 @@ public final class ExceptionTester {
         }
 
         for (Class<? extends Throwable> throwable : throwables) {
-            Throwable t = TestUtils.createBean(throwable);
+            Throwable t = TestReflectionUtils.createBean(throwable);
             try {
                 throw t;
             } catch (Throwable e) {
