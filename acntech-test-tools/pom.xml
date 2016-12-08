@@ -12,6 +12,10 @@
 
     <artifactId>acntech-test-tools</artifactId>
 
+    <name>AcnTech Test Tools</name>
+    <description>AcnTech tools for testing</description>
+    <url>https://github.com/acntech/acntech-common/acntech-test-tools</url>
+
     <!-- DEPENDENCIES -->
     <dependencies>
         <!-- Logging -->
