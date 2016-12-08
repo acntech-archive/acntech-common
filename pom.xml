@@ -175,7 +175,7 @@
 
             <repositories>
                 <repository>
-                    <id>acntech</id>
+                    <id>acntech-releases</id>
                     <name>AcnTech Releases</name>
                     <url>https://nexus.acntech.no/content/repositories/releases</url>
                     <releases>
@@ -189,7 +189,7 @@
                 </repository>
 
                 <repository>
-                    <id>acntech</id>
+                    <id>acntech-snapshots</id>
                     <name>AcnTech Snapshots</name>
                     <url>https://nexus.acntech.no/content/repositories/snapshots</url>
                     <releases>
