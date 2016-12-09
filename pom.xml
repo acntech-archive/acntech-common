@@ -7,7 +7,7 @@
     <groupId>no.acntech.common</groupId>
     <artifactId>acntech-common</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.0</version>
 
     <name>AcnTech Common</name>
     <description>AcnTech common utils and tools</description>
