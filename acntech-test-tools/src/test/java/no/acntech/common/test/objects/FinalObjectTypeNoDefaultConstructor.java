@@ -1,4 +1,4 @@
-package no.acntech.common.test;
+package no.acntech.common.test.objects;
 
 public class FinalObjectTypeNoDefaultConstructor {
 

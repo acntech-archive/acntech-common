@@ -23,6 +23,15 @@ public final class JavaBeanTester {
     private JavaBeanTester() {
     }
 
+    /**
+     * Test getters and setters for passed classes.
+     *
+     * @param classes Classes to test.
+     * @param <T>     Class type.
+     * @throws IntrospectionException   If an exception occurs during introspection.
+     * @throws IllegalArgumentException If passed class array is null.
+     */
+    @SafeVarargs
     public static <T> void test(final Class<T>... classes) throws IntrospectionException {
         if (classes == null) {
             throw new IllegalArgumentException("Input classes is null");
@@ -33,6 +42,14 @@ public final class JavaBeanTester {
         }
     }
 
+    /**
+     * Test getters and setters for passed class.
+     *
+     * @param clazz Class to test.
+     * @param <T>   Class type.
+     * @throws IntrospectionException   If an exception occurs during introspection.
+     * @throws IllegalArgumentException If passed class array is null.
+     */
     public static <T> void test(final Class<T> clazz) throws IntrospectionException {
         if (clazz == null) {
             throw new IllegalArgumentException("Input class is null");
@@ -41,6 +58,15 @@ public final class JavaBeanTester {
         test(clazz, new String[0]);
     }
 
+    /**
+     * Test getters and setters for passed class.
+     *
+     * @param clazz           Class to test.
+     * @param skipTheseFields Names of fields that should not be tested.
+     * @param <T>             Class type.
+     * @throws IntrospectionException   If an exception occurs during introspection.
+     * @throws IllegalArgumentException If passed class array is null.
+     */
     public static <T> void test(final Class<T> clazz, final String... skipTheseFields) throws IntrospectionException {
 
         List<GetterSetter> gettersAndSetters = TestReflectionUtils.findGettersAndSetters(clazz, skipTheseFields);
@@ -63,7 +89,7 @@ public final class JavaBeanTester {
                 assertEquals(String.format("Failed when testing types %s", descriptor.getName()), expectedType, actualType);
 
             } catch (Exception e) {
-                String error = String.format("An exception was thrown during bean no.acntech.common.no.acntech.common.test %s", descriptor.getName());
+                String error = String.format("An exception was thrown during bean test %s", descriptor.getName());
                 LOGGER.error(error, e);
                 fail(String.format("%s: %s", error, e.toString()));
             }

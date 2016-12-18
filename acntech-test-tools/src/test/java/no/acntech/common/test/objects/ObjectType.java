@@ -1,6 +1,6 @@
-package no.acntech.common.test;
+package no.acntech.common.test.objects;
 
-class TestBean {
+public class ObjectType {
 
     private String str;
     private Object[] objArr;
