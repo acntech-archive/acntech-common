@@ -1,5 +1,8 @@
 package no.acntech.common.test;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -7,14 +10,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.util.*;
 
 public final class TestReflectionUtils {
 
@@ -44,7 +40,7 @@ public final class TestReflectionUtils {
     }
 
     static <T> T createBean(final Class<T> clazz, Object... args) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException {
-        final Constructor<?> constructor = getConstructor(clazz);
+        final Constructor<?> constructor = findDefaultConstructor(clazz);
         return createBean(constructor, args);
     }
 
@@ -74,7 +70,7 @@ public final class TestReflectionUtils {
         return constructors.length > 0 ? constructors : clazz.getDeclaredConstructors();
     }
 
-    static Constructor<?> getConstructor(final Class<?> clazz) {
+    static Constructor<?> findDefaultConstructor(final Class<?> clazz) {
         Constructor<?>[] constructors = getConstructors(clazz);
 
         if (constructors == null || constructors.length == 0) {
@@ -93,6 +89,21 @@ public final class TestReflectionUtils {
         }
 
         return constructors[index];
+    }
+
+    static Constructor<?> findConstructorWithParameters(final Class<?> clazz, final Class<?>... args) {
+        Constructor<?>[] constructors = getConstructors(clazz);
+
+        if (constructors != null) {
+            for (Constructor<?> constructor : constructors) {
+                Class<?>[] params = constructor.getParameterTypes();
+                if (allParametersMatch(args, params)) {
+                    return constructor;
+                }
+            }
+        }
+
+        return null;
     }
 
     static <T> List<GetterSetter> findGettersAndSetters(final Class<T> clazz, final String... skipThese) throws IntrospectionException {
@@ -144,5 +155,16 @@ public final class TestReflectionUtils {
         } else {
             LOGGER.trace("Getter for field {} is non boolean", descriptor.getName());
         }
+    }
+
+    private static boolean allParametersMatch(final Class<?>[] params1, final Class<?>[] params2) {
+        if (params1 == null || params2 == null || params1.length != params2.length) {
+            return Boolean.FALSE;
+        }
+        boolean allMatch = Boolean.TRUE;
+        for (int i = 0; i < params1.length; i++) {
+            allMatch = allMatch && params1[i].isAssignableFrom(params2[i]);
+        }
+        return allMatch;
     }
 }

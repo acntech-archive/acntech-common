@@ -1,13 +1,13 @@
 package no.acntech.common.test;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
-public final class ExceptionTester {
+import static org.hamcrest.CoreMatchers.instanceOf;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.Assert.fail;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ExceptionTester.class);
+public final class ExceptionTester {
 
     private ExceptionTester() {
     }
@@ -21,18 +21,45 @@ public final class ExceptionTester {
      * @throws InvocationTargetException If constructor of exception throws exception.
      */
     @SafeVarargs
-    public static void test(Class<? extends Throwable>... throwables) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+    public static void testExceptions(Class<? extends Throwable>... throwables) throws IllegalAccessException, InstantiationException, InvocationTargetException {
         if (throwables == null) {
             throw new IllegalArgumentException("Input is null");
         }
 
         for (Class<? extends Throwable> throwable : throwables) {
-            Throwable t = TestReflectionUtils.createBean(throwable);
+            testException(throwable);
+        }
+    }
+
+    public static void testException(Class<? extends Throwable> throwable) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+        if (throwable == null) {
+            throw new IllegalArgumentException("Input is null");
+        }
+
+        Constructor<?> constructor = TestReflectionUtils.findConstructorWithParameters(throwable);
+        testException(constructor, throwable);
+        constructor = TestReflectionUtils.findConstructorWithParameters(throwable, String.class);
+        testException(constructor, throwable, "Exception message");
+        constructor = TestReflectionUtils.findConstructorWithParameters(throwable, Throwable.class);
+        testException(constructor, throwable, new Throwable("Exception cause"));
+        constructor = TestReflectionUtils.findConstructorWithParameters(throwable, String.class, Throwable.class);
+        testException(constructor, throwable, "Exception message", new Throwable("Exception cause"));
+    }
+
+    private static void testException(Constructor<?> constructor, Class<? extends Throwable> throwable, Object... args) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+        if (constructor != null) {
+            Throwable t = TestReflectionUtils.createBean(constructor, args);
             try {
-                throw t;
+                throwException(t);
+
+                fail("Exception was not thrown");
             } catch (Throwable e) {
-                LOGGER.info("Throwable tested", e);
+                assertThat("Exception is not of expected type", e, instanceOf(throwable));
             }
         }
+    }
+
+    private static void throwException(Throwable t) throws Throwable {
+        throw t;
     }
 }

@@ -32,13 +32,13 @@ public final class JavaBeanTester {
      * @throws IllegalArgumentException If passed class array is null.
      */
     @SafeVarargs
-    public static <T> void test(final Class<T>... classes) throws IntrospectionException {
+    public static <T> void testClasses(final Class<T>... classes) throws IntrospectionException {
         if (classes == null) {
             throw new IllegalArgumentException("Input classes is null");
         }
 
         for (Class<T> clazz : classes) {
-            test(clazz);
+            testClass(clazz);
         }
     }
 
@@ -50,12 +50,12 @@ public final class JavaBeanTester {
      * @throws IntrospectionException   If an exception occurs during introspection.
      * @throws IllegalArgumentException If passed class array is null.
      */
-    public static <T> void test(final Class<T> clazz) throws IntrospectionException {
+    public static <T> void testClass(final Class<T> clazz) throws IntrospectionException {
         if (clazz == null) {
             throw new IllegalArgumentException("Input class is null");
         }
 
-        test(clazz, new String[0]);
+        testClass(clazz, new String[0]);
     }
 
     /**
@@ -67,7 +67,7 @@ public final class JavaBeanTester {
      * @throws IntrospectionException   If an exception occurs during introspection.
      * @throws IllegalArgumentException If passed class array is null.
      */
-    public static <T> void test(final Class<T> clazz, final String... skipTheseFields) throws IntrospectionException {
+    public static <T> void testClass(final Class<T> clazz, final String... skipTheseFields) throws IntrospectionException {
 
         List<GetterSetter> gettersAndSetters = TestReflectionUtils.findGettersAndSetters(clazz, skipTheseFields);
 

@@ -6,6 +6,6 @@ public class TestExceptionTest {
 
     @Test
     public void testExceptions() throws Exception {
-        ExceptionTester.test(TestException.class);
+        ExceptionTester.testExceptions(TestException.class);
     }
 }

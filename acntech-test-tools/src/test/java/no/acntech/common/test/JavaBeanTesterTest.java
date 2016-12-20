@@ -9,11 +9,11 @@ public class JavaBeanTesterTest {
 
     @Test
     public void testUsingTestBean() throws IntrospectionException {
-        JavaBeanTester.test(ObjectType.class);
+        JavaBeanTester.testClasses(ObjectType.class);
     }
 
     @Test
     public void testUsingTestBeanWithSkipParams() throws IntrospectionException {
-        JavaBeanTester.test(ObjectType.class, "str", "int", "obj");
+        JavaBeanTester.testClass(ObjectType.class, "str", "int", "obj");
     }
 }
