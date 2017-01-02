@@ -1,8 +1,7 @@
 package no.acntech.common.test;
 
-import org.junit.Test;
-
 import no.acntech.common.test.objects.ObjectType;
+import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -27,14 +26,14 @@ public class TestReflectionUtilsTest {
         ObjectType objectType = new ObjectType();
         TestReflectionUtils.setInternalField(objectType, "str", "1337");
 
-        assertEquals("1337", objectType.getStr());
+        assertEquals("Field value is different in getter", "1337", objectType.getStr());
     }
 
     @Test
     public void testFindClassesInPackage() throws Exception {
-        Class<?>[] classes = TestReflectionUtils.findClasses(TestReflectionUtils.class.getPackage());
+        Class<?>[] classes = TestReflectionUtils.findClasses(TestReflectionUtils.class.getPackage(), Boolean.TRUE);
 
-        assertNotNull(classes);
-        assertTrue(classes.length > 0);
+        assertNotNull("Package classes are null", classes);
+        assertTrue("No classes found in package", classes.length > 0);
     }
 }
