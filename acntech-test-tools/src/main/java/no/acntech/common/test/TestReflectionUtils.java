@@ -1,8 +1,5 @@
 package no.acntech.common.test;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -13,7 +10,15 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class TestReflectionUtils {
 
@@ -21,9 +26,6 @@ public final class TestReflectionUtils {
     private static final char PKG_SEPARATOR = '.';
     private static final char DIR_SEPARATOR = '/';
     private static final String CLASS_FILE_SUFFIX = ".class";
-
-    private TestReflectionUtils() {
-    }
 
     /**
      * Set the value of the field of an object.
@@ -35,7 +37,7 @@ public final class TestReflectionUtils {
      * @throws IllegalAccessException   If unable to set the field value of the target object.
      * @throws NoSuchFieldException     If no field found for fieldName.
      */
-    public static void setInternalField(Object target, String fieldName, Object value) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException {
+    public static void setInternalField(final Object target, String fieldName, Object value) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException {
         if (target == null) {
             throw new IllegalArgumentException("Target object is null");
         }
@@ -55,7 +57,8 @@ public final class TestReflectionUtils {
      * @throws NoSuchMethodException     If no method can be found for name.
      * @throws InvocationTargetException If the method throws an exception.
      */
-    public static Object invokePrivateMethod(Object target, String methodName, Object... args) throws IllegalArgumentException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+    public static Object invokePrivateMethod(final Object target, String methodName,
+                                             Object... args) throws IllegalArgumentException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         if (target == null) {
             throw new IllegalArgumentException("Target object is null");
         }
@@ -66,38 +69,42 @@ public final class TestReflectionUtils {
     }
 
     static <T> T createBean(final Class<T> clazz, Object... args) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException {
-        final Constructor<?> constructor = findDefaultConstructor(clazz);
+        final Constructor<T> constructor = findDefaultConstructor(clazz);
         return createBean(constructor, args);
     }
 
-    static <T> T createBean(final Constructor<?> constructor, Object... args) throws IllegalAccessException, InvocationTargetException, InstantiationException {
+    static <T> T createBean(final Constructor<T> constructor, Object... args) throws IllegalAccessException, InvocationTargetException, InstantiationException {
         if (constructor == null) {
             throw new IllegalArgumentException("Constructor is null");
         }
 
         if (args != null) {
-            return (T) constructor.newInstance(args);
+            return constructor.newInstance(args);
         }
 
         int minParams = constructor.getParameterTypes().length;
         if (minParams == 0) {
-            return (T) constructor.newInstance();
+            return constructor.newInstance();
         } else {
-            return (T) constructor.newInstance(new Object[minParams]);
+            return constructor.newInstance(new Object[minParams]);
         }
     }
 
-    static Constructor<?>[] getConstructors(final Class<?> clazz) {
+    static <T> Constructor<T>[] getConstructors(final Class<T> clazz) {
         if (clazz == null) {
             throw new IllegalArgumentException("Input class is null");
         }
 
         Constructor<?>[] constructors = clazz.getConstructors();
-        return constructors.length > 0 ? constructors : clazz.getDeclaredConstructors();
+        if (constructors.length > 0) {
+            return (Constructor<T>[]) constructors;
+        } else {
+            return (Constructor<T>[]) clazz.getDeclaredConstructors();
+        }
     }
 
-    static Constructor<?> findDefaultConstructor(final Class<?> clazz) {
-        Constructor<?>[] constructors = getConstructors(clazz);
+    static <T> Constructor<T> findDefaultConstructor(final Class<T> clazz) {
+        Constructor<T>[] constructors = getConstructors(clazz);
 
         if (constructors == null || constructors.length == 0) {
             return null;
@@ -117,11 +124,11 @@ public final class TestReflectionUtils {
         return constructors[index];
     }
 
-    static Constructor<?> findConstructorWithParameters(final Class<?> clazz, final Class<?>... args) {
-        Constructor<?>[] constructors = getConstructors(clazz);
+    static <T> Constructor<T> findConstructorWithParameters(final Class<T> clazz, final Class<?>... args) {
+        Constructor<T>[] constructors = getConstructors(clazz);
 
         if (constructors != null) {
-            for (Constructor<?> constructor : constructors) {
+            for (Constructor<T> constructor : constructors) {
                 Class<?>[] params = constructor.getParameterTypes();
                 if (isParametersMatch(args, params)) {
                     return constructor;

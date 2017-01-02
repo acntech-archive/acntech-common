@@ -1,10 +1,7 @@
 package no.acntech.common.test;
 
-import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.xml.datatype.DatatypeConfigurationException;
+
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
@@ -13,15 +10,16 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
 
+import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 public final class JavaBeanTester {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JavaBeanTester.class);
-
-    private JavaBeanTester() {
-    }
 
     /**
      * Test getters and setters for given classes.
@@ -106,7 +104,8 @@ public final class JavaBeanTester {
         testClasses(classes);
     }
 
-    private static Object createType(Class<?> clazz) throws InstantiationException, IllegalAccessException, IllegalArgumentException, SecurityException, InvocationTargetException, DatatypeConfigurationException {
+    private static Object createType(
+            Class<?> clazz) throws InstantiationException, IllegalAccessException, IllegalArgumentException, SecurityException, InvocationTargetException, DatatypeConfigurationException {
 
         Object object = createBasicType(clazz);
         if (object != null) {

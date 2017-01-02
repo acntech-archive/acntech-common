@@ -9,9 +9,6 @@ import static org.junit.Assert.fail;
 
 public final class ExceptionTester {
 
-    private ExceptionTester() {
-    }
-
     /**
      * Test exceptions.
      *
@@ -36,7 +33,7 @@ public final class ExceptionTester {
             throw new IllegalArgumentException("Input is null");
         }
 
-        Constructor<?> constructor = TestReflectionUtils.findConstructorWithParameters(throwable);
+        Constructor<? extends Throwable> constructor = TestReflectionUtils.findConstructorWithParameters(throwable);
         testException(constructor, throwable);
         constructor = TestReflectionUtils.findConstructorWithParameters(throwable, String.class);
         testException(constructor, throwable, "Exception message");
@@ -46,7 +43,8 @@ public final class ExceptionTester {
         testException(constructor, throwable, "Exception message", new Throwable("Exception cause"));
     }
 
-    private static void testException(Constructor<?> constructor, Class<? extends Throwable> throwable, Object... args) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+    private static void testException(Constructor<? extends Throwable> constructor, Class<? extends Throwable> throwable,
+                                      Object... args) throws IllegalAccessException, InstantiationException, InvocationTargetException {
         if (constructor != null) {
             Throwable t = TestReflectionUtils.createBean(constructor, args);
             try {
