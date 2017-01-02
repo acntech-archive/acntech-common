@@ -1,5 +1,8 @@
 package no.acntech.common.test;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -10,15 +13,13 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class TestReflectionUtils {
 
@@ -142,66 +143,87 @@ public final class TestReflectionUtils {
     /**
      * Find classes within a package and subpackages.
      *
-     * @param pkg Package to search for classes from.
+     * @param pkg     Package to search for classes from.
+     * @param recurse Search for classes recursively.
      * @return Classes found within a package and subpackages.
      * @throws IOException            If reading using classloader fails.
      * @throws ClassNotFoundException If creating class for a class name fails.
      */
-    public static Class<?>[] findClasses(Package pkg) throws IOException, ClassNotFoundException {
+    static Class<?>[] findClasses(final Package pkg, boolean recurse) throws IOException, ClassNotFoundException {
         if (pkg == null) {
             throw new IllegalArgumentException("Package is null");
         }
 
-        return findClasses(pkg.getName());
+        return findClasses(pkg.getName(), recurse);
     }
 
     /**
      * Find classes within a package and subpackages.
      *
      * @param packageName Package name to search for classes from.
+     * @param recurse     Search for classes recursively.
      * @return Classes found within a package and subpackages.
      * @throws IOException            If reading using classloader fails.
      * @throws ClassNotFoundException If creating class for a class name fails.
      */
-    public static Class<?>[] findClasses(String packageName) throws IOException, ClassNotFoundException {
+    static Class<?>[] findClasses(String packageName, boolean recurse) throws IOException, ClassNotFoundException {
         if (packageName == null) {
             throw new IllegalArgumentException("Package name is null");
         }
+
+        LOGGER.info("Searching for classes in package {}{}", packageName, recurse ? " recursively" : "");
 
         ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         assert classLoader != null;
 
         String path = packageName.replace(PKG_SEPARATOR, DIR_SEPARATOR);
+
+        LOGGER.trace("Converted package {} to path {}", packageName, path);
+
         Enumeration<URL> resources = classLoader.getResources(path);
 
         List<File> directories = new ArrayList<>();
         while (resources.hasMoreElements()) {
             URL resource = resources.nextElement();
-            directories.add(new File(resource.getFile()));
+            String pathName = URLDecoder.decode(resource.getFile(), "UTF-8");
+            directories.add(new File(pathName));
         }
 
         List<Class<?>> classes = new ArrayList<>();
         for (File directory : directories) {
-            classes.addAll(findClasses(directory, packageName));
+            classes.addAll(findClasses(directory, packageName, recurse));
         }
+
+        LOGGER.info("Found {} classes in package {}{}", classes.size(), packageName, recurse ? " with child packages" : "");
 
         return classes.toArray(new Class[classes.size()]);
     }
 
-    private static List<Class<?>> findClasses(File directory, String packageName) throws ClassNotFoundException {
+    private static List<Class<?>> findClasses(File directory, String packageName, boolean recurse) throws ClassNotFoundException {
         List<Class<?>> classes = new ArrayList<>();
 
-        File[] files = directory.listFiles();
-        if (!directory.exists() || files == null) {
+        if (!directory.exists()) {
+            LOGGER.debug("Directory {} does not exist, so skipping", directory.getAbsolutePath());
             return classes;
         }
 
+        File[] files = directory.listFiles();
+        if (files == null) {
+            LOGGER.debug("No children found in directory {}, so skipping", directory.getAbsolutePath());
+            return classes;
+        }
+
+        LOGGER.debug("Searching for classes in package {} in directory {}", packageName, directory.getAbsolutePath());
+
         for (File file : files) {
-            if (file.isDirectory()) {
+            if (file.isDirectory() && recurse) {
                 assert !file.getName().contains(String.valueOf(PKG_SEPARATOR));
-                classes.addAll(findClasses(file, packageName + String.valueOf(PKG_SEPARATOR) + file.getName()));
-            } else if (file.getName().endsWith(CLASS_FILE_SUFFIX)) {
-                classes.add(Class.forName(packageName + String.valueOf(PKG_SEPARATOR) + file.getName().replace(CLASS_FILE_SUFFIX, "")));
+                String subPackageName = packageName + String.valueOf(PKG_SEPARATOR) + file.getName();
+                classes.addAll(findClasses(file, subPackageName, recurse));
+            } else if (file.isFile() && file.getName().endsWith(CLASS_FILE_SUFFIX)) {
+                String className = packageName + String.valueOf(PKG_SEPARATOR) + file.getName().replace(CLASS_FILE_SUFFIX, "");
+                LOGGER.trace("Found class {} in directory {}", className, directory.getAbsolutePath());
+                classes.add(Class.forName(className));
             }
         }
         return classes;

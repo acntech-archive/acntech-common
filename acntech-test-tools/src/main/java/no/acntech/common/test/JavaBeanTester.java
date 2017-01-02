@@ -1,7 +1,10 @@
 package no.acntech.common.test;
 
-import javax.xml.datatype.DatatypeConfigurationException;
+import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.xml.datatype.DatatypeConfigurationException;
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
@@ -9,10 +12,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
-
-import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -93,14 +92,15 @@ public final class JavaBeanTester {
     /**
      * Test getters and setters for all classes found in package and subpackages.
      *
-     * @param pkg Package to search for classes from.
+     * @param pkg     Package to search for classes from.
+     * @param recurse Search for classes recursively.
      * @throws IOException              If reading using classloader fails.
      * @throws ClassNotFoundException   If creating class for a class name fails.
      * @throws IntrospectionException   If an exception occurs during introspection.
      * @throws IllegalArgumentException If passed package is null.
      */
-    public static void testClasses(Package pkg) throws IOException, ClassNotFoundException, IntrospectionException {
-        Class<?>[] classes = TestReflectionUtils.findClasses(pkg);
+    public static void testClasses(Package pkg, boolean recurse) throws IOException, ClassNotFoundException, IntrospectionException {
+        Class<?>[] classes = TestReflectionUtils.findClasses(pkg, recurse);
         testClasses(classes);
     }
 

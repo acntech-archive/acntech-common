@@ -1,10 +1,9 @@
 package no.acntech.common.test;
 
-import java.beans.IntrospectionException;
-
+import no.acntech.common.test.objects.ObjectType;
 import org.junit.Test;
 
-import no.acntech.common.test.objects.ObjectType;
+import java.beans.IntrospectionException;
 
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -12,7 +11,7 @@ import static org.junit.Assert.fail;
 public class JavaBeanTesterTest {
 
     @Test
-    public void testUsingNullClass() throws IntrospectionException {
+    public void testClassUsingNull() throws IntrospectionException {
         try {
             JavaBeanTester.testClass(null);
 
@@ -23,7 +22,7 @@ public class JavaBeanTesterTest {
     }
 
     @Test
-    public void testUsingNullClasses() throws IntrospectionException {
+    public void testClassesUsingNull() throws IntrospectionException {
         try {
             JavaBeanTester.testClasses((Class<?>[]) null);
 
@@ -34,12 +33,12 @@ public class JavaBeanTesterTest {
     }
 
     @Test
-    public void testUsingTestBean() throws IntrospectionException {
+    public void testClassesUsingTestBean() throws IntrospectionException {
         JavaBeanTester.testClasses(ObjectType.class);
     }
 
     @Test
-    public void testUsingTestBeanWithSkipParams() throws IntrospectionException {
+    public void testClassUsingTestBeanWithSkipParams() throws IntrospectionException {
         JavaBeanTester.testClass(ObjectType.class, "str", "int", "obj");
     }
 }
