@@ -13,6 +13,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.URL;
+import java.net.URLDecoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Enumeration;
@@ -184,7 +185,8 @@ public final class TestReflectionUtils {
         List<File> directories = new ArrayList<>();
         while (resources.hasMoreElements()) {
             URL resource = resources.nextElement();
-            directories.add(new File(resource.getFile()));
+            String pathName = URLDecoder.decode(resource.getFile(), "UTF-8");
+            directories.add(new File(pathName));
         }
 
         List<Class<?>> classes = new ArrayList<>();
