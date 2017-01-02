@@ -6,20 +6,36 @@ import org.slf4j.LoggerFactory;
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URL;
 import java.util.*;
 
 public final class TestReflectionUtils {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TestReflectionUtils.class);
+    private static final char PKG_SEPARATOR = '.';
+    private static final char DIR_SEPARATOR = '/';
+    private static final String CLASS_FILE_SUFFIX = ".class";
 
     private TestReflectionUtils() {
     }
 
-    public static void setPrivateField(Object target, String fieldName, Object value) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException {
+    /**
+     * Set the value of the field of an object.
+     *
+     * @param target    The target object to set the field value of.
+     * @param fieldName The name of the field to set the value of.
+     * @param value     The value to set into the object field.
+     * @throws IllegalArgumentException If target object is null.
+     * @throws IllegalAccessException   If unable to set the field value of the target object.
+     * @throws NoSuchFieldException     If no field found for fieldName.
+     */
+    public static void setInternalField(Object target, String fieldName, Object value) throws IllegalArgumentException, IllegalAccessException, NoSuchFieldException {
         if (target == null) {
             throw new IllegalArgumentException("Target object is null");
         }
@@ -29,14 +45,24 @@ public final class TestReflectionUtils {
         field.set(target, value);
     }
 
-    public static void invokePrivateMethod(Object target, String methodName, Object... args) throws IllegalArgumentException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
+    /**
+     * @param target     The target object to invoke method of.
+     * @param methodName The name of the method to invoke.
+     * @param args       The arguments of the method to be invoked.
+     * @return
+     * @throws IllegalArgumentException  If target object is null.
+     * @throws IllegalAccessException    If access to method is illegal.
+     * @throws NoSuchMethodException     If no method can be found for name.
+     * @throws InvocationTargetException If the method throws an exception.
+     */
+    public static Object invokePrivateMethod(Object target, String methodName, Object... args) throws IllegalArgumentException, IllegalAccessException, NoSuchMethodException, InvocationTargetException {
         if (target == null) {
             throw new IllegalArgumentException("Target object is null");
         }
 
         Method method = target.getClass().getDeclaredMethod(methodName);
         method.setAccessible(Boolean.TRUE);
-        method.invoke(target, args);
+        return method.invoke(target, args);
     }
 
     static <T> T createBean(final Class<T> clazz, Object... args) throws IllegalAccessException, IllegalArgumentException, InvocationTargetException, InstantiationException {
@@ -97,13 +123,81 @@ public final class TestReflectionUtils {
         if (constructors != null) {
             for (Constructor<?> constructor : constructors) {
                 Class<?>[] params = constructor.getParameterTypes();
-                if (allParametersMatch(args, params)) {
+                if (isParametersMatch(args, params)) {
                     return constructor;
                 }
             }
         }
 
         return null;
+    }
+
+    /**
+     * Find classes within a package and subpackages.
+     *
+     * @param pkg Package to search for classes from.
+     * @return Classes found within a package and subpackages.
+     * @throws IOException            If reading using classloader fails.
+     * @throws ClassNotFoundException If creating class for a class name fails.
+     */
+    public static Class<?>[] findClasses(Package pkg) throws IOException, ClassNotFoundException {
+        if (pkg == null) {
+            throw new IllegalArgumentException("Package is null");
+        }
+
+        return findClasses(pkg.getName());
+    }
+
+    /**
+     * Find classes within a package and subpackages.
+     *
+     * @param packageName Package name to search for classes from.
+     * @return Classes found within a package and subpackages.
+     * @throws IOException            If reading using classloader fails.
+     * @throws ClassNotFoundException If creating class for a class name fails.
+     */
+    public static Class<?>[] findClasses(String packageName) throws IOException, ClassNotFoundException {
+        if (packageName == null) {
+            throw new IllegalArgumentException("Package name is null");
+        }
+
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        assert classLoader != null;
+
+        String path = packageName.replace(PKG_SEPARATOR, DIR_SEPARATOR);
+        Enumeration<URL> resources = classLoader.getResources(path);
+
+        List<File> directories = new ArrayList<>();
+        while (resources.hasMoreElements()) {
+            URL resource = resources.nextElement();
+            directories.add(new File(resource.getFile()));
+        }
+
+        List<Class<?>> classes = new ArrayList<>();
+        for (File directory : directories) {
+            classes.addAll(findClasses(directory, packageName));
+        }
+
+        return classes.toArray(new Class[classes.size()]);
+    }
+
+    private static List<Class<?>> findClasses(File directory, String packageName) throws ClassNotFoundException {
+        List<Class<?>> classes = new ArrayList<>();
+
+        File[] files = directory.listFiles();
+        if (!directory.exists() || files == null) {
+            return classes;
+        }
+
+        for (File file : files) {
+            if (file.isDirectory()) {
+                assert !file.getName().contains(String.valueOf(PKG_SEPARATOR));
+                classes.addAll(findClasses(file, packageName + String.valueOf(PKG_SEPARATOR) + file.getName()));
+            } else if (file.getName().endsWith(CLASS_FILE_SUFFIX)) {
+                classes.add(Class.forName(packageName + String.valueOf(PKG_SEPARATOR) + file.getName().replace(CLASS_FILE_SUFFIX, "")));
+            }
+        }
+        return classes;
     }
 
     static <T> List<GetterSetter> findGettersAndSetters(final Class<T> clazz, final String... skipThese) throws IntrospectionException {
@@ -157,7 +251,7 @@ public final class TestReflectionUtils {
         }
     }
 
-    private static boolean allParametersMatch(final Class<?>[] params1, final Class<?>[] params2) {
+    private static boolean isParametersMatch(final Class<?>[] params1, final Class<?>[] params2) {
         if (params1 == null || params2 == null || params1.length != params2.length) {
             return Boolean.FALSE;
         }

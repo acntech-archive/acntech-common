@@ -7,7 +7,7 @@ import org.slf4j.LoggerFactory;
 import javax.xml.datatype.DatatypeConfigurationException;
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
-import java.lang.reflect.Constructor;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -24,33 +24,30 @@ public final class JavaBeanTester {
     }
 
     /**
-     * Test getters and setters for passed classes.
+     * Test getters and setters for given classes.
      *
      * @param classes Classes to test.
-     * @param <T>     Class type.
      * @throws IntrospectionException   If an exception occurs during introspection.
      * @throws IllegalArgumentException If passed class array is null.
      */
-    @SafeVarargs
-    public static <T> void testClasses(final Class<T>... classes) throws IntrospectionException {
+    public static void testClasses(final Class<?>... classes) throws IntrospectionException {
         if (classes == null) {
             throw new IllegalArgumentException("Input classes is null");
         }
 
-        for (Class<T> clazz : classes) {
+        for (Class<?> clazz : classes) {
             testClass(clazz);
         }
     }
 
     /**
-     * Test getters and setters for passed class.
+     * Test getters and setters for given class.
      *
      * @param clazz Class to test.
-     * @param <T>   Class type.
      * @throws IntrospectionException   If an exception occurs during introspection.
      * @throws IllegalArgumentException If passed class array is null.
      */
-    public static <T> void testClass(final Class<T> clazz) throws IntrospectionException {
+    public static void testClass(final Class<?> clazz) throws IntrospectionException {
         if (clazz == null) {
             throw new IllegalArgumentException("Input class is null");
         }
@@ -59,15 +56,14 @@ public final class JavaBeanTester {
     }
 
     /**
-     * Test getters and setters for passed class.
+     * Test getters and setters for given class.
      *
      * @param clazz           Class to test.
      * @param skipTheseFields Names of fields that should not be tested.
-     * @param <T>             Class type.
      * @throws IntrospectionException   If an exception occurs during introspection.
      * @throws IllegalArgumentException If passed class array is null.
      */
-    public static <T> void testClass(final Class<T> clazz, final String... skipTheseFields) throws IntrospectionException {
+    public static void testClass(final Class<?> clazz, final String... skipTheseFields) throws IntrospectionException {
 
         List<GetterSetter> gettersAndSetters = TestReflectionUtils.findGettersAndSetters(clazz, skipTheseFields);
 
@@ -80,7 +76,7 @@ public final class JavaBeanTester {
             try {
                 final Object expectedType = createType(getter.getReturnType());
 
-                T bean = TestReflectionUtils.createBean(clazz);
+                Object bean = TestReflectionUtils.createBean(clazz);
 
                 setter.invoke(bean, expectedType);
 
@@ -96,6 +92,20 @@ public final class JavaBeanTester {
         }
     }
 
+    /**
+     * Test getters and setters for all classes found in package and subpackages.
+     *
+     * @param pkg Package to search for classes from.
+     * @throws IOException              If reading using classloader fails.
+     * @throws ClassNotFoundException   If creating class for a class name fails.
+     * @throws IntrospectionException   If an exception occurs during introspection.
+     * @throws IllegalArgumentException If passed package is null.
+     */
+    public static void testClasses(Package pkg) throws IOException, ClassNotFoundException, IntrospectionException {
+        Class<?>[] classes = TestReflectionUtils.findClasses(pkg);
+        testClasses(classes);
+    }
+
     private static Object createType(Class<?> clazz) throws InstantiationException, IllegalAccessException, IllegalArgumentException, SecurityException, InvocationTargetException, DatatypeConfigurationException {
 
         Object object = createBasicType(clazz);
@@ -103,12 +113,12 @@ public final class JavaBeanTester {
             return object;
         }
 
-        object = createObjectType(clazz);
+        object = createMockType(clazz);
         if (object != null) {
             return object;
         }
 
-        object = createMockType(clazz);
+        object = createObjectType(clazz);
         if (object != null) {
             return object;
         }
@@ -127,22 +137,15 @@ public final class JavaBeanTester {
         return null;
     }
 
-    private static Object createObjectType(Class<?> clazz) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
-        final Constructor<?>[] constructors = clazz.getConstructors();
-
-        for (Constructor<?> constructor : constructors) {
-            if (constructor.getParameterTypes().length == 0) {
-                return constructor.newInstance();
-            }
-        }
-        return null;
-    }
-
     private static Object createMockType(Class<?> clazz) {
         if (!Modifier.isFinal(clazz.getModifiers())) {
             return Mockito.mock(clazz);
         } else {
             return null;
         }
+    }
+
+    private static Object createObjectType(Class<?> clazz) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
+        return TestReflectionUtils.createBean(clazz);
     }
 }
