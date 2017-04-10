@@ -5,17 +5,27 @@ AcnTech Testing Tools and Utils.
 
 Test the getters and setters of the Java class *TestBean*:
 ```
-JavaBeanTester.test(TestBean.class);
+JavaBeanTester.testClass(TestBean.class);
 ```
 
 Test the getters and setters of a Java class *TestBean*, except those for the fields *myString*, *myInteger* and *myObject*:
 ```
-JavaBeanTester.test(TestBean.class, "myString", "myInteger", "myObject");
+JavaBeanTester.testClass(TestBean.class, "myString", "myInteger", "myObject");
 ```
 
 Test the getters and setters of the Java classes *TestBean* and *AnotherTestBean*:
 ```
-JavaBeanTester.test(TestBean.class, AnotherTestBean.class);
+JavaBeanTester.testClasses(TestBean.class, AnotherTestBean.class);
+```
+
+Test the getters and setters of all Java classes in the package *TestBean* exists in:
+```
+JavaBeanTester.testClasses(TestBean.class.getPackage());
+```
+
+Test the getters and setters of all Java classes in the package *TestBean* exists in, filtered by the search criteria set by the *ClassCriteria*:
+```
+JavaBeanTester.testClasses(TestBean.class.getPackage(), ClassCriteria.createDefault().build());
 ```
 
 ## TestReflectionUtils usage
@@ -32,7 +42,12 @@ TestReflectionUtils.invokePrivateMethod(targetObject, "myMethodName", firstMetho
 
 ## ExceptionTester usage
 
-Test exception:
+Test exceptions:
 ```
-ExceptionTester.test(MyException.class, MyOtherException.class);
+ExceptionTester.testException(MyException.class);
+```
+
+Test more than one exception:
+```
+ExceptionTester.testExceptions(MyException.class, MyOtherException.class);
 ```

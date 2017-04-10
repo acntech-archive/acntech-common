@@ -4,9 +4,9 @@ import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
-interface BasicType extends Type {
+abstract class BasicType implements Type {
 
-    boolean isType(Class<?> clazz);
+    abstract boolean isType(Class<?> clazz);
 
     static List<BasicType> getBasicTypes() {
 
@@ -126,6 +126,19 @@ interface BasicType extends Type {
             @Override
             public Object getType(Class<?> clazz) {
                 return Array.newInstance(clazz.getComponentType(), 1);
+            }
+        });
+
+        // Enum
+        basicTypes.add(new BasicType() {
+            @Override
+            public boolean isType(Class<?> clazz) {
+                return clazz.isEnum();
+            }
+
+            @Override
+            public Object getType(Class<?> clazz) {
+                return clazz.getEnumConstants()[0];
             }
         });
 

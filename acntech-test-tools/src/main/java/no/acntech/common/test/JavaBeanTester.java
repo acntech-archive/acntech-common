@@ -1,10 +1,7 @@
 package no.acntech.common.test;
 
-import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.xml.datatype.DatatypeConfigurationException;
+
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
@@ -13,12 +10,50 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
 public final class JavaBeanTester {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JavaBeanTester.class);
+
+    private JavaBeanTester() {
+    }
+
+    /**
+     * Too generic method name.
+     *
+     * @deprecated use {@link #testClasses(Class[])} ()} instead.
+     */
+    @Deprecated
+    public static void test(final Class<?>... classes) throws IntrospectionException {
+        testClasses(classes);
+    }
+
+    /**
+     * Too generic method name.
+     *
+     * @deprecated use {@link #testClass(Class)} ()} instead.
+     */
+    @Deprecated
+    public static void test(final Class<?> clazz) throws IntrospectionException {
+        testClass(clazz);
+    }
+
+    /**
+     * Too generic method name.
+     *
+     * @deprecated use {@link #testClass(Class, String...)} ()} instead.
+     */
+    @Deprecated
+    public static void test(final Class<?> clazz, final String... skipTheseFields) throws IntrospectionException {
+        testClass(clazz, skipTheseFields);
+    }
 
     /**
      * Test getters and setters for given classes.
@@ -79,7 +114,7 @@ public final class JavaBeanTester {
 
                 final Object actualType = getter.invoke(bean);
 
-                assertEquals(String.format("Failed when testing types %s", descriptor.getName()), expectedType, actualType);
+                assertThat(String.format("Failed when testing types %s", descriptor.getName()), expectedType, is(actualType));
 
             } catch (Exception e) {
                 String error = String.format("An exception was thrown during bean test %s", descriptor.getName());
@@ -90,22 +125,34 @@ public final class JavaBeanTester {
     }
 
     /**
-     * Test getters and setters for all classes found in package and subpackages.
+     * Test getters and setters for all classes found in package.
      *
-     * @param pkg     Package to search for classes from.
-     * @param recurse Search for classes recursively.
+     * @param pkg Package to search for classes from.
      * @throws IOException              If reading using classloader fails.
      * @throws ClassNotFoundException   If creating class for a class name fails.
      * @throws IntrospectionException   If an exception occurs during introspection.
      * @throws IllegalArgumentException If passed package is null.
      */
-    public static void testClasses(Package pkg, boolean recurse) throws IOException, ClassNotFoundException, IntrospectionException {
-        Class<?>[] classes = TestReflectionUtils.findClasses(pkg, recurse);
+    public static void testClasses(Package pkg) throws IOException, ClassNotFoundException, IntrospectionException {
+        testClasses(pkg, ClassCriteria.createDefault().build());
+    }
+
+    /**
+     * Test getters and setters for all classes found in package depending on search criteria.
+     *
+     * @param pkg           Package to search for classes from.
+     * @param classCriteria Package search criteria for classes.
+     * @throws IOException              If reading using classloader fails.
+     * @throws ClassNotFoundException   If creating class for a class name fails.
+     * @throws IntrospectionException   If an exception occurs during introspection.
+     * @throws IllegalArgumentException If passed package is null.
+     */
+    public static void testClasses(Package pkg, ClassCriteria classCriteria) throws IOException, ClassNotFoundException, IntrospectionException {
+        Class<?>[] classes = TestReflectionUtils.findClasses(pkg, classCriteria);
         testClasses(classes);
     }
 
-    private static Object createType(
-            Class<?> clazz) throws InstantiationException, IllegalAccessException, IllegalArgumentException, SecurityException, InvocationTargetException, DatatypeConfigurationException {
+    private static Object createType(Class<?> clazz) throws InstantiationException, IllegalAccessException, InvocationTargetException, DatatypeConfigurationException {
 
         Object object = createBasicType(clazz);
         if (object != null) {
@@ -144,7 +191,7 @@ public final class JavaBeanTester {
         }
     }
 
-    private static Object createObjectType(Class<?> clazz) throws IllegalArgumentException, InstantiationException, IllegalAccessException, InvocationTargetException {
+    private static Object createObjectType(Class<?> clazz) throws InstantiationException, IllegalAccessException, InvocationTargetException {
         return TestReflectionUtils.createBean(clazz);
     }
 }

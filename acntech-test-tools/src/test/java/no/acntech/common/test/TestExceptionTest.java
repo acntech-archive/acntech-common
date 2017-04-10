@@ -1,32 +1,26 @@
 package no.acntech.common.test;
 
+import org.junit.Rule;
 import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.rules.ExpectedException;
 
 public class TestExceptionTest {
 
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
+
     @Test
     public void testExceptionUsingNull() throws Exception {
-        try {
-            ExceptionTester.testException(null);
+        thrown.expect(IllegalArgumentException.class);
 
-            fail("Should throw exception");
-        } catch (Exception e) {
-            assertTrue("Exception is of wrong type", e instanceof IllegalArgumentException);
-        }
+        ExceptionTester.testException(null);
     }
 
     @Test
     public void testExceptionsUsingNull() throws Exception {
-        try {
-            ExceptionTester.testExceptions(null);
+        thrown.expect(IllegalArgumentException.class);
 
-            fail("Should throw exception");
-        } catch (Exception e) {
-            assertTrue("Exception is of wrong type", e instanceof IllegalArgumentException);
-        }
+        ExceptionTester.testExceptions(null);
     }
 
     @Test

@@ -1,6 +1,6 @@
-package no.acntech.common.test.objects;
+package no.acntech.common.test.testsubject;
 
-public class ObjectType {
+public class DummyObject {
 
     private String str;
     private Object[] objArr;
@@ -17,8 +17,9 @@ public class ObjectType {
     private char chr;
     private Character chr2;
     private Object obj;
-    private FinalObjectType finalObj;
-    private FinalObjectTypeNoDefaultConstructor finalObjectNoDefaultConstructor;
+    private DummyEnum dummyEnumType;
+    private DummyFinalObject dummyFinalObj;
+    private DummyObjectWithNoDefaultConstructor dummyObjectNoDefaultConstructor;
 
     public String getStr() {
         return str;
@@ -140,19 +141,27 @@ public class ObjectType {
         this.obj = obj;
     }
 
-    public FinalObjectType getFinalObj() {
-        return finalObj;
+    public DummyEnum getDummyEnumType() {
+        return dummyEnumType;
     }
 
-    public void setFinalObj(FinalObjectType finalObj) {
-        this.finalObj = finalObj;
+    public void setDummyEnumType(DummyEnum dummyEnumType) {
+        this.dummyEnumType = dummyEnumType;
     }
 
-    public FinalObjectTypeNoDefaultConstructor getFinalObjectNoDefaultConstructor() {
-        return finalObjectNoDefaultConstructor;
+    public DummyFinalObject getDummyFinalObj() {
+        return dummyFinalObj;
     }
 
-    public void setFinalObjectNoDefaultConstructor(FinalObjectTypeNoDefaultConstructor finalObjectNoDefaultConstructor) {
-        this.finalObjectNoDefaultConstructor = finalObjectNoDefaultConstructor;
+    public void setDummyFinalObj(DummyFinalObject dummyFinalObj) {
+        this.dummyFinalObj = dummyFinalObj;
+    }
+
+    public DummyObjectWithNoDefaultConstructor getDummyObjectNoDefaultConstructor() {
+        return dummyObjectNoDefaultConstructor;
+    }
+
+    public void setDummyObjectNoDefaultConstructor(DummyObjectWithNoDefaultConstructor dummyObjectNoDefaultConstructor) {
+        this.dummyObjectNoDefaultConstructor = dummyObjectNoDefaultConstructor;
     }
 }
