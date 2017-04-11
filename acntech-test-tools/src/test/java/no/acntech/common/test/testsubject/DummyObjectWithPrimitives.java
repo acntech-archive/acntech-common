@@ -1,9 +1,10 @@
 package no.acntech.common.test.testsubject;
 
-public class DummyObject {
+public class DummyObjectWithPrimitives {
 
     private String str;
     private Object[] objArr;
+    private String[] strArr;
     private boolean bool;
     private Boolean bool2;
     private int itgr;
@@ -17,9 +18,6 @@ public class DummyObject {
     private char chr;
     private Character chr2;
     private Object obj;
-    private DummyEnum dummyEnumType;
-    private DummyFinalObject dummyFinalObj;
-    private DummyObjectWithNoDefaultConstructor dummyObjectNoDefaultConstructor;
 
     public String getStr() {
         return str;
@@ -35,6 +33,14 @@ public class DummyObject {
 
     public void setObjArr(Object[] objArr) {
         this.objArr = objArr;
+    }
+
+    public String[] getStrArr() {
+        return strArr;
+    }
+
+    public void setStrArr(String[] strArr) {
+        this.strArr = strArr;
     }
 
     public boolean isBool() {
@@ -139,29 +145,5 @@ public class DummyObject {
 
     public void setObj(Object obj) {
         this.obj = obj;
-    }
-
-    public DummyEnum getDummyEnumType() {
-        return dummyEnumType;
-    }
-
-    public void setDummyEnumType(DummyEnum dummyEnumType) {
-        this.dummyEnumType = dummyEnumType;
-    }
-
-    public DummyFinalObject getDummyFinalObj() {
-        return dummyFinalObj;
-    }
-
-    public void setDummyFinalObj(DummyFinalObject dummyFinalObj) {
-        this.dummyFinalObj = dummyFinalObj;
-    }
-
-    public DummyObjectWithNoDefaultConstructor getDummyObjectNoDefaultConstructor() {
-        return dummyObjectNoDefaultConstructor;
-    }
-
-    public void setDummyObjectNoDefaultConstructor(DummyObjectWithNoDefaultConstructor dummyObjectNoDefaultConstructor) {
-        this.dummyObjectNoDefaultConstructor = dummyObjectNoDefaultConstructor;
     }
 }

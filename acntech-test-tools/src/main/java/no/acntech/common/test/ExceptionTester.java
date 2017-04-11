@@ -38,7 +38,7 @@ public final class ExceptionTester {
     @SafeVarargs
     public static void testExceptions(Class<? extends Throwable>... throwables) throws IllegalAccessException, InstantiationException, InvocationTargetException {
         if (throwables == null) {
-            throw new IllegalArgumentException("Input is null");
+            throw new IllegalArgumentException("Input throwables array is null");
         }
 
         for (Class<? extends Throwable> throwable : throwables) {
@@ -59,14 +59,34 @@ public final class ExceptionTester {
             throw new IllegalArgumentException("Input is null");
         }
 
-        Constructor<? extends Throwable> constructor = TestReflectionUtils.findConstructor(throwable);
-        testException(constructor, throwable);
-        constructor = TestReflectionUtils.findConstructor(throwable, String.class);
-        testException(constructor, throwable, "Exception message");
-        constructor = TestReflectionUtils.findConstructor(throwable, Throwable.class);
-        testException(constructor, throwable, new Throwable("Exception cause"));
-        constructor = TestReflectionUtils.findConstructor(throwable, String.class, Throwable.class);
-        testException(constructor, throwable, "Exception message", new Throwable("Exception cause"));
+        testExceptionWithArgs(throwable);
+        testExceptionWithArgs(throwable, "Exception message");
+        testExceptionWithArgs(throwable, new Throwable("Exception cause"));
+        testExceptionWithArgs(throwable, "Exception message", new Throwable("Exception cause"));
+    }
+
+    /**
+     * Test single exception.
+     *
+     * @param throwable Exception to test.
+     * @param args      Constructor arguments for the exception to test.
+     * @throws IllegalAccessException    If access control denied access to constructor of exception.
+     * @throws InstantiationException    If constructor of exception is from an abstract class.
+     * @throws InvocationTargetException If constructor of exception throws exception.
+     */
+    public static void testExceptionWithArgs(Class<? extends Throwable> throwable, Object... args) throws IllegalAccessException, InstantiationException, InvocationTargetException {
+        if (throwable == null) {
+            throw new IllegalArgumentException("Input throwable is null");
+        }
+
+        if (args == null) {
+            throw new IllegalArgumentException("Input args array is null");
+        }
+
+        Class<?>[] params = TestTypeFactory.getClassesForObjects(args);
+
+        Constructor<? extends Throwable> constructor = TestReflectionUtils.findConstructorWithAllParamsMatch(throwable, params);
+        testException(constructor, throwable, args);
     }
 
     private static void testException(Constructor<? extends Throwable> constructor, Class<? extends Throwable> throwable,

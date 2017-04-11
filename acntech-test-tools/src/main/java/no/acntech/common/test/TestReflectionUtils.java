@@ -69,17 +69,17 @@ public final class TestReflectionUtils {
             throw new IllegalArgumentException("Target object is null");
         }
 
-        Class<?>[] argClasses = getClassesForObjects(args);
+        Class<?>[] params = TestTypeFactory.getClassesForObjects(args);
 
-        Method method = target.getClass().getDeclaredMethod(methodName, argClasses);
+        Method method = target.getClass().getDeclaredMethod(methodName, params);
         method.setAccessible(Boolean.TRUE);
         return method.invoke(target, args);
     }
 
     static <T> T createBean(final Class<T> clazz, Object... args) throws IllegalAccessException, InvocationTargetException, InstantiationException {
-        Class<?>[] argClasses = getClassesForObjects(args);
+        Class<?>[] params = TestTypeFactory.getClassesForObjects(args);
 
-        final Constructor<T> constructor = findConstructor(clazz, argClasses);
+        final Constructor<T> constructor = findConstructorWithAllParamsMatch(clazz, params);
 
         return createBean(constructor, args);
     }
@@ -96,13 +96,13 @@ public final class TestReflectionUtils {
         }
     }
 
-    static <T> Constructor<T> findConstructor(final Class<T> clazz, final Class<?>... args) {
-        Constructor<T>[] constructors = getAllConstructors(clazz);
+    static <T> Constructor<T> findConstructorWithAllParamsMatch(final Class<T> clazz, final Class<?>... wantedParams) {
+        Constructor<T>[] constructors = findAllConstructors(clazz);
 
         if (constructors != null) {
             for (Constructor<T> constructor : constructors) {
-                Class<?>[] params = constructor.getParameterTypes();
-                if (isParametersMatch(args, params)) {
+                Class<?>[] actualParams = constructor.getParameterTypes();
+                if (isAllParamsMatch(actualParams, wantedParams)) {
                     return constructor;
                 }
             }
@@ -112,7 +112,29 @@ public final class TestReflectionUtils {
     }
 
     @SuppressWarnings("unchecked")
-    private static <T> Constructor<T>[] getAllConstructors(final Class<T> clazz) {
+    static <T> Constructor<T>[] findConstructorsWithParamMatch(final Class<T> clazz, final Class<?> wantedParam) {
+        Constructor<T>[] constructors = findAllConstructors(clazz);
+
+        List<Constructor<T>> matchedConstructors = new ArrayList<>();
+
+        if (constructors != null) {
+            for (Constructor<T> constructor : constructors) {
+                Class<?>[] actualParams = constructor.getParameterTypes();
+                if (isParamMatch(actualParams, wantedParam)) {
+                    matchedConstructors.add(constructor);
+                }
+            }
+        }
+
+        if (matchedConstructors.isEmpty()) {
+            throw new NoSuchConstructorException(clazz);
+        } else {
+            return matchedConstructors.toArray(new Constructor[matchedConstructors.size()]);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> Constructor<T>[] findAllConstructors(final Class<T> clazz) {
         if (clazz == null) {
             throw new IllegalArgumentException("Input class is null");
         }
@@ -299,6 +321,38 @@ public final class TestReflectionUtils {
         return gettersAndSetters;
     }
 
+    static <T> List<Getter> findGetters(final Class<T> clazz, final String... skipThese) throws IntrospectionException {
+        if (clazz == null) {
+            throw new IllegalArgumentException("Input class is null");
+        }
+
+        Set<String> skipFields = skipThese == null ? new HashSet<String>() : new HashSet<>(Arrays.asList(skipThese));
+
+        List<Getter> getters = new ArrayList<>();
+
+        final PropertyDescriptor[] descriptors = Introspector.getBeanInfo(clazz).getPropertyDescriptors();
+
+        for (PropertyDescriptor descriptor : descriptors) {
+
+            if (skipFields.contains(descriptor.getName())) {
+                LOGGER.info("Skipping field {} as ordered", descriptor.getName());
+                continue;
+            }
+
+            findBooleanGetters(clazz, descriptor);
+
+            final Method getter = descriptor.getReadMethod();
+
+            if (getter != null) {
+                getters.add(new Getter(descriptor, getter));
+            } else {
+                LOGGER.debug("Getter missing for field {}", descriptor.getName());
+            }
+        }
+
+        return getters;
+    }
+
     private static <T> void findBooleanGetters(Class<T> clazz, PropertyDescriptor descriptor) throws IntrospectionException {
         if (descriptor.getReadMethod() == null && Boolean.class.isAssignableFrom(descriptor.getPropertyType())) {
             LOGGER.debug("Getter for field {} is boolean", descriptor.getName());
@@ -313,27 +367,26 @@ public final class TestReflectionUtils {
         }
     }
 
-    private static boolean isParametersMatch(final Class<?>[] params1, final Class<?>[] params2) {
-        if (params1 == null || params2 == null || params1.length != params2.length) {
+    private static boolean isAllParamsMatch(final Class<?>[] actualParams, final Class<?>[] wantedParams) {
+        if (actualParams == null || wantedParams == null || actualParams.length != wantedParams.length) {
             return Boolean.FALSE;
         }
         boolean allMatch = Boolean.TRUE;
-        for (int i = 0; i < params1.length; i++) {
-            allMatch = allMatch && params1[i].isAssignableFrom(params2[i]);
+        for (int i = 0; i < actualParams.length; i++) {
+            allMatch = allMatch && actualParams[i].isAssignableFrom(wantedParams[i]);
         }
         return allMatch;
     }
 
-    private static Class<?>[] getClassesForObjects(Object... objects) {
-        if (objects == null) {
-            return new Class[0];
+    private static boolean isParamMatch(final Class<?>[] actualParams, final Class<?> wantedParam) {
+        if (actualParams != null && wantedParam != null && actualParams.length > 0) {
+            for (Class<?> actualArg : actualParams) {
+                if (actualArg.isAssignableFrom(wantedParam)) {
+                    return Boolean.TRUE;
+                }
+            }
         }
-
-        Class<?>[] argClasses = new Class<?>[objects.length];
-        for (int i = 0; i < objects.length; i++) {
-            argClasses[i] = objects[i].getClass();
-        }
-        return argClasses;
+        return Boolean.FALSE;
     }
 
     private static boolean isPathRegexMatch(ClassCriteria classCriteria, File file) {

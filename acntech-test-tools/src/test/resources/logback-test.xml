@@ -6,7 +6,7 @@
         </encoder>
     </appender>
 
-    <logger name="no.acntech" level="TRACE" additivity="false">
+    <logger name="no.acntech" level="DEBUG" additivity="false">
         <appender-ref ref="STDOUT"/>
     </logger>
 

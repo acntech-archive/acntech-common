@@ -7,8 +7,8 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
-import no.acntech.common.test.testsubject.DummyObject;
 import no.acntech.common.test.testsubject.DummyObjectWithNoDefaultConstructor;
+import no.acntech.common.test.testsubject.DummyObjectWithPrimitives;
 import no.acntech.common.test.testsubject.subpackage.DummySubObject;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -33,14 +33,14 @@ public class TestReflectionUtilsTest {
     @Test
     public void testSetInternalFieldNoSuchField() throws Exception {
         thrown.expect(NoSuchFieldException.class);
-        DummyObject subject = new DummyObject();
+        DummyObjectWithPrimitives subject = new DummyObjectWithPrimitives();
 
         TestReflectionUtils.setInternalField(subject, "whatever", "whatever");
     }
 
     @Test
     public void testSetInternalField() throws Exception {
-        DummyObject subject = new DummyObject();
+        DummyObjectWithPrimitives subject = new DummyObjectWithPrimitives();
 
         TestReflectionUtils.setInternalField(subject, "str", "1337");
 
@@ -57,14 +57,14 @@ public class TestReflectionUtilsTest {
     @Test
     public void testInvokePrivateMethodNoSuchMethod() throws Exception {
         thrown.expect(NoSuchMethodException.class);
-        DummyObject subject = new DummyObject();
+        DummyObjectWithPrimitives subject = new DummyObjectWithPrimitives();
 
         TestReflectionUtils.invokePrivateMethod(subject, "whatever");
     }
 
     @Test
     public void testInvokePrivateMethodSetter() throws Exception {
-        DummyObject subject = new DummyObject();
+        DummyObjectWithPrimitives subject = new DummyObjectWithPrimitives();
 
         assertThat("Value is already set", subject.getStr(), nullValue());
 
@@ -76,7 +76,7 @@ public class TestReflectionUtilsTest {
 
     @Test
     public void testInvokePrivateMethodGetter() throws Exception {
-        DummyObject subject = new DummyObject();
+        DummyObjectWithPrimitives subject = new DummyObjectWithPrimitives();
         subject.setStr("1337");
 
         Object returnObject = TestReflectionUtils.invokePrivateMethod(subject, "getStr");
@@ -101,7 +101,7 @@ public class TestReflectionUtilsTest {
 
     @Test
     public void testCreateBeanWithDefaultConstructor() throws Exception {
-        DummyObject subject = TestReflectionUtils.createBean(DummyObject.class);
+        DummyObjectWithPrimitives subject = TestReflectionUtils.createBean(DummyObjectWithPrimitives.class);
 
         assertThat("Object is null", subject, notNullValue());
     }
@@ -139,68 +139,68 @@ public class TestReflectionUtilsTest {
     public void testFindClassesClassCriteriaIsNull() throws Exception {
         thrown.expect(IllegalArgumentException.class);
 
-        TestReflectionUtils.findClasses(DummyObject.class.getPackage(), null);
+        TestReflectionUtils.findClasses(DummyObjectWithPrimitives.class.getPackage(), null);
     }
 
     @Test
     public void testFindClassesInPackageDefaultSearchCriteria() throws Exception {
-        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObject.class.getPackage(), ClassCriteria.createDefault().build());
+        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObjectWithPrimitives.class.getPackage(), ClassCriteria.createDefault().build());
+
+        assertThat("Package classes are null", classes, notNullValue());
+        assertThat("Wrong number og classes found in package", classes.length, is(9));
+    }
+
+    @Test
+    public void testFindClassesInPackageExcludeInterfaces() throws Exception {
+        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObjectWithPrimitives.class.getPackage(), ClassCriteria.createDefault().doExcludeInterfaces().build());
+
+        assertThat("Package classes are null", classes, notNullValue());
+        assertThat("Wrong number og classes found in package", classes.length, is(7)); // Annotations are also interfaces
+    }
+
+    @Test
+    public void testFindClassesInPackageExcludeEnums() throws Exception {
+        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObjectWithPrimitives.class.getPackage(), ClassCriteria.createDefault().doExcludeEnums().build());
 
         assertThat("Package classes are null", classes, notNullValue());
         assertThat("Wrong number og classes found in package", classes.length, is(8));
     }
 
     @Test
-    public void testFindClassesInPackageExcludeInterfaces() throws Exception {
-        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObject.class.getPackage(), ClassCriteria.createDefault().doExcludeInterfaces().build());
-
-        assertThat("Package classes are null", classes, notNullValue());
-        assertThat("Wrong number og classes found in package", classes.length, is(6)); // Annotations are also interfaces
-    }
-
-    @Test
-    public void testFindClassesInPackageExcludeEnums() throws Exception {
-        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObject.class.getPackage(), ClassCriteria.createDefault().doExcludeEnums().build());
-
-        assertThat("Package classes are null", classes, notNullValue());
-        assertThat("Wrong number og classes found in package", classes.length, is(7));
-    }
-
-    @Test
     public void testFindClassesInPackageExcludeAnnotations() throws Exception {
-        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObject.class.getPackage(), ClassCriteria.createDefault().doExcludeAnnotations().build());
+        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObjectWithPrimitives.class.getPackage(), ClassCriteria.createDefault().doExcludeAnnotations().build());
 
         assertThat("Package classes are null", classes, notNullValue());
-        assertThat("Wrong number og classes found in package", classes.length, is(7));
+        assertThat("Wrong number og classes found in package", classes.length, is(8));
     }
 
     @Test
     public void testFindClassesInPackageExcludeMemberClasses() throws Exception {
-        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObject.class.getPackage(), ClassCriteria.createDefault().doExcludeMemberClasses().build());
+        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObjectWithPrimitives.class.getPackage(), ClassCriteria.createDefault().doExcludeMemberClasses().build());
 
         assertThat("Package classes are null", classes, notNullValue());
-        assertThat("Wrong number og classes found in package", classes.length, is(7));
+        assertThat("Wrong number og classes found in package", classes.length, is(8));
     }
 
     @Test
     public void testFindClassesInPackageExcludeAll() throws Exception {
-        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObject.class.getPackage(), ClassCriteria.createDefault().doExcludeAll().build());
+        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObjectWithPrimitives.class.getPackage(), ClassCriteria.createDefault().doExcludeAll().build());
 
         assertThat("Package classes are null", classes, notNullValue());
-        assertThat("Wrong number og classes found in package", classes.length, is(4));
+        assertThat("Wrong number og classes found in package", classes.length, is(5));
     }
 
     @Test
     public void testFindClassesInPackageRecursiveSearchCriteria() throws Exception {
-        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObject.class.getPackage(), ClassCriteria.createRecursive().build());
+        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObjectWithPrimitives.class.getPackage(), ClassCriteria.createRecursive().build());
 
         assertThat("Package classes are null", classes, notNullValue());
-        assertThat("Wrong number og classes found in package", classes.length, is(10));
+        assertThat("Wrong number og classes found in package", classes.length, is(11));
     }
 
     @Test
     public void testFindClassesInPackageExcludeMavenTestClasses() throws Exception {
-        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObject.class.getPackage(), ClassCriteria.createDefault().doExcludePaths("test-classes").build());
+        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObjectWithPrimitives.class.getPackage(), ClassCriteria.createDefault().doExcludePaths("test-classes").build());
 
         assertThat("Package classes are null", classes, notNullValue());
         assertThat("Array of classes is not empty", classes.length, is(0));
@@ -223,17 +223,25 @@ public class TestReflectionUtilsTest {
 
     @Test
     public void testFindGettersAndSetters() throws Exception {
-        List<GetterSetter> gettersAndSetters = TestReflectionUtils.findGettersAndSetters(DummyObject.class);
+        List<GetterSetter> gettersAndSetters = TestReflectionUtils.findGettersAndSetters(DummyObjectWithPrimitives.class);
 
         assertThat("List is null", gettersAndSetters, notNullValue());
-        assertThat("List of getters and setters is not empty", gettersAndSetters, hasSize(18));
+        assertThat("List of getters and setters is not empty", gettersAndSetters, hasSize(16));
     }
 
     @Test
     public void testFindGettersAndSettersSkippingSome() throws Exception {
-        List<GetterSetter> gettersAndSetters = TestReflectionUtils.findGettersAndSetters(DummyObject.class, "bool2", "chr");
+        List<GetterSetter> gettersAndSetters = TestReflectionUtils.findGettersAndSetters(DummyObjectWithPrimitives.class, "bool2", "chr");
 
         assertThat("List is null", gettersAndSetters, notNullValue());
-        assertThat("List of getters and setters is not empty", gettersAndSetters, hasSize(16));
+        assertThat("List of getters and setters is not empty", gettersAndSetters, hasSize(14));
+    }
+
+    @Test
+    public void testFindGetters() throws Exception {
+        List<Getter> getters = TestReflectionUtils.findGetters(DummyObjectWithNoDefaultConstructor.class, "class");
+
+        assertThat("List is null", getters, notNullValue());
+        assertThat("List of getters and setters is not empty", getters, hasSize(1));
     }
 }

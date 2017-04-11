@@ -27,4 +27,14 @@ public class TestExceptionTest {
     public void testExceptions() throws Exception {
         ExceptionTester.testExceptions(TestException.class);
     }
+
+    @Test
+    public void testClassloaderNullException() throws Exception {
+        ExceptionTester.testExceptionWithArgs(ClassloaderNullException.class, Thread.currentThread());
+    }
+
+    @Test
+    public void testNoSuchConstructorException() throws Exception {
+        ExceptionTester.testExceptionWithArgs(NoSuchConstructorException.class, this.getClass());
+    }
 }
