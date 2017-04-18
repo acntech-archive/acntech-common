@@ -1,8 +1,8 @@
 package no.acntech.common.test;
 
-public interface BasicType {
+public interface BasicType<T> {
 
-    boolean isType(Class<?> clazz);
+    boolean isType(Class<T> clazz);
 
-    Object getType(Class<?> clazz);
+    T getType(Class<T> clazz);
 }

@@ -55,6 +55,7 @@
         <junit.version>4.12</junit.version>
         <hamcrest.version>1.3</hamcrest.version>
         <mockito.version>1.10.19</mockito.version>
+        <easymock.version>3.4</easymock.version>
 
         <!-- Maven Plugins -->
         <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
@@ -102,6 +103,13 @@
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-all</artifactId>
                 <version>${mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>org.easymock</groupId>
+                <artifactId>easymock</artifactId>
+                <version>${easymock.version}</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>

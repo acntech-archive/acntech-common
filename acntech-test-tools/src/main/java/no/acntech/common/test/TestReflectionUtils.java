@@ -9,14 +9,12 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -74,6 +72,31 @@ public final class TestReflectionUtils {
         Method method = target.getClass().getDeclaredMethod(methodName, params);
         method.setAccessible(Boolean.TRUE);
         return method.invoke(target, args);
+    }
+
+    static boolean isFinalClass(final Class<?> clazz) {
+        if (clazz == null) {
+            throw new IllegalArgumentException("Class is null");
+        }
+
+        return Modifier.isFinal(clazz.getModifiers());
+    }
+
+    static boolean isClassExists(final Class<?> clazz, final ClassLoader classLoader) {
+        if (clazz == null) {
+            throw new IllegalArgumentException("Class is null");
+        }
+
+        if (classLoader == null) {
+            throw new IllegalArgumentException("ClassLoader is null");
+        }
+
+        try {
+            Class.forName(clazz.getName(), Boolean.FALSE, classLoader);
+            return Boolean.TRUE;
+        } catch (ClassNotFoundException e) {
+            return Boolean.FALSE;
+        }
     }
 
     static <T> T createBean(final Class<T> clazz, Object... args) throws IllegalAccessException, InvocationTargetException, InstantiationException {
@@ -150,18 +173,18 @@ public final class TestReflectionUtils {
     /**
      * Find classes within a package depending on search criteria.
      *
-     * @param pkg            Package to search for classes from.
-     * @param searchCriteria Search criteria for classes.
+     * @param pkg           Package to search for classes from.
+     * @param classCriteria Package search criteria for classes.
      * @return Classes found.
      * @throws IOException            If reading using classloader fails.
      * @throws ClassNotFoundException If creating class for a class name fails.
      */
-    static Class<?>[] findClasses(final Package pkg, ClassCriteria searchCriteria) throws IOException, ClassNotFoundException {
+    static Class<?>[] findClasses(final Package pkg, ClassCriteria classCriteria) throws IOException, ClassNotFoundException {
         if (pkg == null) {
             throw new IllegalArgumentException("Package is null");
         }
 
-        return findClasses(pkg.getName(), searchCriteria);
+        return findClasses(pkg.getName(), classCriteria);
     }
 
     /**
@@ -205,7 +228,12 @@ public final class TestReflectionUtils {
 
         List<Class<?>> classes = new ArrayList<>();
         for (File file : files) {
-            classes.addAll(findClasses(file, packageName, classCriteria));
+            classes.addAll(findClasses(file, packageName, classCriteria, classes));
+
+            if (classes.size() >= classCriteria.getMaxClassLimit()) {
+                LOGGER.info("Number of classes found during package search has reached the max class limit of {}, so stopping search", classCriteria.getMaxClassLimit());
+                break;
+            }
         }
 
         LOGGER.info("Found a total of {} classes in package {}{}", classes.size(), packageName, classCriteria.isRecursiveSearch() ? " and all child packages" : "");
@@ -213,7 +241,7 @@ public final class TestReflectionUtils {
         return classes.toArray(new Class[classes.size()]);
     }
 
-    private static List<Class<?>> findClasses(File directory, String packageName, ClassCriteria classCriteria) throws ClassNotFoundException {
+    private static List<Class<?>> findClasses(File directory, String packageName, ClassCriteria classCriteria, final List<Class<?>> allClasses) throws ClassNotFoundException {
         List<Class<?>> classes = new ArrayList<>();
 
         if (!directory.exists()) {
@@ -235,11 +263,15 @@ public final class TestReflectionUtils {
             }
 
             if (file.isDirectory()) {
-                processDirectory(file, packageName, classCriteria, classes);
+                processDirectory(file, packageName, classCriteria, classes, allClasses);
             } else if (file.isFile()) {
                 processFile(directory, file, packageName, classCriteria, classes);
             } else {
                 LOGGER.debug("File {} is not a directory nor a file, so skipping", file.getName());
+            }
+
+            if (allClasses.size() + classes.size() >= classCriteria.getMaxClassLimit()) {
+                break;
             }
         }
 
@@ -248,14 +280,14 @@ public final class TestReflectionUtils {
         return classes;
     }
 
-    private static void processDirectory(File file, String packageName, ClassCriteria classCriteria, List<Class<?>> classes) throws ClassNotFoundException {
+    private static void processDirectory(File file, String packageName, ClassCriteria classCriteria, final List<Class<?>> allClasses, List<Class<?>> classes) throws ClassNotFoundException {
         if (!classCriteria.isRecursiveSearch()) {
             LOGGER.trace("Non recursive search criteria specified, so skipping directory");
         } else if (file.getName().contains(String.valueOf(PKG_SEPARATOR))) {
             LOGGER.debug("Directory {} contains character {}, so skipping directory", file.getAbsolutePath(), PKG_SEPARATOR);
         } else {
             String subPackageName = packageName + String.valueOf(PKG_SEPARATOR) + file.getName();
-            classes.addAll(findClasses(file, subPackageName, classCriteria));
+            classes.addAll(findClasses(file, subPackageName, classCriteria, allClasses));
         }
     }
 
@@ -280,12 +312,14 @@ public final class TestReflectionUtils {
         }
     }
 
-    static <T> List<GetterSetter> findGettersAndSetters(final Class<T> clazz, final String... skipThese) throws IntrospectionException {
+    static <T> List<GetterSetter> findGettersAndSetters(final Class<T> clazz) throws IntrospectionException {
+        return findGettersAndSetters(clazz, FieldCriteria.createDefault().build());
+    }
+
+    static <T> List<GetterSetter> findGettersAndSetters(final Class<T> clazz, final FieldCriteria fieldCriteria) throws IntrospectionException {
         if (clazz == null) {
             throw new IllegalArgumentException("Input class is null");
         }
-
-        Set<String> skipFields = skipThese == null ? new HashSet<String>() : new HashSet<>(Arrays.asList(skipThese));
 
         List<GetterSetter> gettersAndSetters = new ArrayList<>();
 
@@ -293,7 +327,7 @@ public final class TestReflectionUtils {
 
         for (PropertyDescriptor descriptor : descriptors) {
 
-            if (skipFields.contains(descriptor.getName())) {
+            if (fieldCriteria.getExcludeFields().contains(descriptor.getName())) {
                 LOGGER.info("Skipping field {} as ordered", descriptor.getName());
                 continue;
             }
@@ -321,12 +355,14 @@ public final class TestReflectionUtils {
         return gettersAndSetters;
     }
 
-    static <T> List<Getter> findGetters(final Class<T> clazz, final String... skipThese) throws IntrospectionException {
+    static <T> List<Getter> findGetters(final Class<T> clazz) throws IntrospectionException {
+        return findGetters(clazz, FieldCriteria.createDefault().build());
+    }
+
+    static <T> List<Getter> findGetters(final Class<T> clazz, final FieldCriteria fieldCriteria) throws IntrospectionException {
         if (clazz == null) {
             throw new IllegalArgumentException("Input class is null");
         }
-
-        Set<String> skipFields = skipThese == null ? new HashSet<String>() : new HashSet<>(Arrays.asList(skipThese));
 
         List<Getter> getters = new ArrayList<>();
 
@@ -334,7 +370,7 @@ public final class TestReflectionUtils {
 
         for (PropertyDescriptor descriptor : descriptors) {
 
-            if (skipFields.contains(descriptor.getName())) {
+            if (fieldCriteria.getExcludeFields().contains(descriptor.getName())) {
                 LOGGER.info("Skipping field {} as ordered", descriptor.getName());
                 continue;
             }

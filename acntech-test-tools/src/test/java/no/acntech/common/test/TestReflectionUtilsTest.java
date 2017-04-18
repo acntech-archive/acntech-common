@@ -7,6 +7,7 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
 
+import no.acntech.common.test.testsubject.DummyFinalObject;
 import no.acntech.common.test.testsubject.DummyObjectWithNoDefaultConstructor;
 import no.acntech.common.test.testsubject.DummyObjectWithPrimitives;
 import no.acntech.common.test.testsubject.subpackage.DummySubObject;
@@ -83,6 +84,16 @@ public class TestReflectionUtilsTest {
 
         assertThat("Return object is null", returnObject, notNullValue());
         assertThat("Value not correct", returnObject.toString(), is("1337"));
+    }
+
+    @Test
+    public void testIsFinalClassWithFinalClass() {
+        assertThat(TestReflectionUtils.isFinalClass(DummyFinalObject.class), is(Boolean.TRUE));
+    }
+
+    @Test
+    public void testIsFinalClassWithNonFinalClass() {
+        assertThat(TestReflectionUtils.isFinalClass(DummyObjectWithPrimitives.class), is(Boolean.FALSE));
     }
 
     @Test
@@ -207,6 +218,14 @@ public class TestReflectionUtilsTest {
     }
 
     @Test
+    public void testFindClassesInPackageRecursiveSearchCriteriaWithLimit() throws Exception {
+        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObjectWithPrimitives.class.getPackage(), ClassCriteria.createRecursive().withMaxClassLimit(7).build());
+
+        assertThat("Package classes are null", classes, notNullValue());
+        assertThat("Wrong number og classes found in package", classes.length, is(7));
+    }
+
+    @Test
     public void testFindGettersAndSettersClassIsNull() throws Exception {
         thrown.expect(IllegalArgumentException.class);
 
@@ -231,7 +250,10 @@ public class TestReflectionUtilsTest {
 
     @Test
     public void testFindGettersAndSettersSkippingSome() throws Exception {
-        List<GetterSetter> gettersAndSetters = TestReflectionUtils.findGettersAndSetters(DummyObjectWithPrimitives.class, "bool2", "chr");
+        List<GetterSetter> gettersAndSetters = TestReflectionUtils.findGettersAndSetters(DummyObjectWithPrimitives.class, FieldCriteria
+                .createDefault()
+                .doExcludeFields("bool2", "chr")
+                .build());
 
         assertThat("List is null", gettersAndSetters, notNullValue());
         assertThat("List of getters and setters is not empty", gettersAndSetters, hasSize(14));
@@ -239,7 +261,10 @@ public class TestReflectionUtilsTest {
 
     @Test
     public void testFindGetters() throws Exception {
-        List<Getter> getters = TestReflectionUtils.findGetters(DummyObjectWithNoDefaultConstructor.class, "class");
+        List<Getter> getters = TestReflectionUtils.findGetters(DummyObjectWithNoDefaultConstructor.class, FieldCriteria
+                .createDefault()
+                .doExcludeFields("class")
+                .build());
 
         assertThat("List is null", getters, notNullValue());
         assertThat("List of getters and setters is not empty", getters, hasSize(1));

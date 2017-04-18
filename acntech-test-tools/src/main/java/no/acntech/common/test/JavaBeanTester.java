@@ -5,7 +5,6 @@ import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
-import java.util.Arrays;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -18,12 +17,14 @@ import static org.junit.Assert.fail;
 public final class JavaBeanTester {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JavaBeanTester.class);
+    private static final String GENERAL_EXCEPTION_MESSAGE_FORMAT = "An exception was thrown during test of field %s on bean of type %s";
+    private static final String OBJECT_INSTANTIATION_EXCEPTION_MESSAGE_FORMAT = "Could not create object for class %s. Add custom types by using TestTypeFactory.addBasicType(BasicType basicType)";
 
     private JavaBeanTester() {
     }
 
     /**
-     * Too generic method name.
+     * Method name is too generic.
      *
      * @deprecated use {@link #testClasses(Class[])} ()} instead.
      */
@@ -33,7 +34,7 @@ public final class JavaBeanTester {
     }
 
     /**
-     * Too generic method name.
+     * Method name is too generic.
      *
      * @deprecated use {@link #testClass(Class)} ()} instead.
      */
@@ -43,7 +44,7 @@ public final class JavaBeanTester {
     }
 
     /**
-     * Too generic method name.
+     * Method name is too generic.
      *
      * @deprecated use {@link #testClass(Class, String...)} ()} instead.
      */
@@ -101,16 +102,33 @@ public final class JavaBeanTester {
             throw new IllegalArgumentException("Skip fields array is null");
         }
 
-        String[] skipTheseFieldsIncludingClass = Arrays.copyOf(skipTheseFields, skipTheseFields.length + 1);
-        skipTheseFieldsIncludingClass[skipTheseFields.length] = "class";
+        testClass(clazz, FieldCriteria.createDefault().doExcludeFields(skipTheseFields).build());
+    }
 
-        List<GetterSetter> gettersAndSetters = TestReflectionUtils.findGettersAndSetters(clazz, skipTheseFieldsIncludingClass);
+    /**
+     * Test getters and setters for given class.
+     *
+     * @param clazz         Class to test.
+     * @param fieldCriteria Search criteria for the fields to be tested.
+     * @throws IntrospectionException   If an exception occurs during introspection.
+     * @throws IllegalArgumentException If passed class array is null.
+     */
+    public static void testClass(final Class<?> clazz, final FieldCriteria fieldCriteria) throws IntrospectionException {
+        if (clazz == null) {
+            throw new IllegalArgumentException("Input class is null");
+        }
+
+        if (fieldCriteria == null) {
+            throw new IllegalArgumentException("Field criteria is null");
+        }
+
+        List<GetterSetter> gettersAndSetters = TestReflectionUtils.findGettersAndSetters(clazz, fieldCriteria);
 
         for (GetterSetter getterSetter : gettersAndSetters) {
             testSetterAndGetter(clazz, getterSetter);
         }
 
-        List<Getter> getters = TestReflectionUtils.findGetters(clazz, skipTheseFieldsIncludingClass);
+        List<Getter> getters = TestReflectionUtils.findGetters(clazz, fieldCriteria);
 
         for (Getter getter : getters) {
             testConstructorAndGetter(clazz, getter);
@@ -134,7 +152,7 @@ public final class JavaBeanTester {
      * Test getters and setters for all classes found in package depending on search criteria.
      *
      * @param pkg           Package to search for classes from.
-     * @param classCriteria Package search criteria for classes.
+     * @param classCriteria Search criteria for the classes to be tested.
      * @throws IOException              If reading using classloader fails.
      * @throws ClassNotFoundException   If creating class for a class name fails.
      * @throws IntrospectionException   If an exception occurs during introspection.
@@ -161,8 +179,12 @@ public final class JavaBeanTester {
 
             assertThat("Failed when testing field " + descriptor.getName(), expectedType, is(actualType));
 
+        } catch (ObjectInstantiationException e) {
+            String error = String.format(OBJECT_INSTANTIATION_EXCEPTION_MESSAGE_FORMAT, clazz.getName());
+            LOGGER.error(error, e);
+            fail(error);
         } catch (Exception e) {
-            String error = "An exception was thrown during test of field " + descriptor.getName() + " on bean of type " + clazz.getName();
+            String error = String.format(GENERAL_EXCEPTION_MESSAGE_FORMAT, descriptor.getName(), clazz.getName());
             LOGGER.error(error, e);
             fail(String.format("%s: %s", error, e.toString()));
         }
@@ -180,8 +202,12 @@ public final class JavaBeanTester {
             for (final Constructor<?> constructor : constructors) {
                 testConstructorAndGetter(constructor, getter, expectedType);
             }
+        } catch (ObjectInstantiationException e) {
+            String error = String.format(OBJECT_INSTANTIATION_EXCEPTION_MESSAGE_FORMAT, clazz.getName());
+            LOGGER.error(error, e);
+            fail(error);
         } catch (Exception e) {
-            LOGGER.trace("An exception was thrown during test of field " + descriptor.getName() + " on bean of type " + clazz.getName(), e);
+            LOGGER.trace(String.format(GENERAL_EXCEPTION_MESSAGE_FORMAT, descriptor.getName(), clazz.getName()), e);
         }
     }
 
@@ -209,7 +235,7 @@ public final class JavaBeanTester {
                 LOGGER.warn("Constructor did not set same class field as used for getter");
             }
         } catch (Exception e) {
-            LOGGER.trace("An exception was thrown during test of field " + descriptor.getName() + " on bean of type " + constructor.getDeclaringClass().getName(), e);
+            LOGGER.trace(String.format(GENERAL_EXCEPTION_MESSAGE_FORMAT, descriptor.getName(), constructor.getDeclaringClass().getName()), e);
         }
     }
 }

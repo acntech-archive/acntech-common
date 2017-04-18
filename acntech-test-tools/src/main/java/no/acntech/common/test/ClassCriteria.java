@@ -4,8 +4,19 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * Search criteria for classes. Used when searching for classes in packages using <b>TestReflectionUtils</b>.
+ *
+ * @see no.acntech.common.test.TestReflectionUtils#findClasses(Package, ClassCriteria)
+ */
 public class ClassCriteria {
 
+    /**
+     * Default max class limit.
+     * Used if no other limit explicitly set.
+     */
+    public static final int DEFAULT_MAX_CLASS_LIMIT = 100;
+    private int maxClassLimit;
     private boolean recursiveSearch;
     private boolean excludeInterfaces;
     private boolean excludeEnums;
@@ -16,52 +27,28 @@ public class ClassCriteria {
     private ClassCriteria() {
     }
 
-    private ClassCriteria(boolean recursiveSearch, boolean excludeInterfaces, boolean excludeEnums, boolean excludeAnnotations, boolean excludeMemberClasses) {
-        this.recursiveSearch = recursiveSearch;
-        this.excludeInterfaces = excludeInterfaces;
-        this.excludeEnums = excludeEnums;
-        this.excludeAnnotations = excludeAnnotations;
-        this.excludeMemberClasses = excludeMemberClasses;
+    public int getMaxClassLimit() {
+        return maxClassLimit;
     }
 
     public boolean isRecursiveSearch() {
         return recursiveSearch;
     }
 
-    private void setRecursiveSearch(boolean recursiveSearch) {
-        this.recursiveSearch = recursiveSearch;
-    }
-
     public boolean isExcludeInterfaces() {
         return excludeInterfaces;
-    }
-
-    private void setExcludeInterfaces(boolean excludeInterfaces) {
-        this.excludeInterfaces = excludeInterfaces;
     }
 
     public boolean isExcludeEnums() {
         return excludeEnums;
     }
 
-    private void setExcludeEnums(boolean excludeEnums) {
-        this.excludeEnums = excludeEnums;
-    }
-
     public boolean isExcludeAnnotations() {
         return excludeAnnotations;
     }
 
-    private void setExcludeAnnotations(boolean excludeAnnotations) {
-        this.excludeAnnotations = excludeAnnotations;
-    }
-
     public boolean isExcludeMemberClasses() {
         return excludeMemberClasses;
-    }
-
-    private void setExcludeMemberClasses(boolean excludeMemberClasses) {
-        this.excludeMemberClasses = excludeMemberClasses;
     }
 
     public Set<String> getExcludePathRegex() {
@@ -69,10 +56,6 @@ public class ClassCriteria {
             excludePathRegex = new HashSet<>();
         }
         return excludePathRegex;
-    }
-
-    private void setExcludePathRegex(Set<String> excludePathRegex) {
-        this.excludePathRegex = excludePathRegex;
     }
 
     /**
@@ -83,12 +66,17 @@ public class ClassCriteria {
      * <li>Include enums</li>
      * <li>Include annotations</li>
      * <li>Include member classes</li>
+     * <li>Max class limit set to <b>ClassCriteria.DEFAULT_MAX_CLASS_LIMIT</b></li>
      * </ul>
      *
      * @return the criteria builder.
+     * @see no.acntech.common.test.ClassCriteria#DEFAULT_MAX_CLASS_LIMIT
      */
     public static Builder createDefault() {
-        return new Builder(new ClassCriteria(Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE));
+        return new Builder(new ClassCriteria())
+                .doNonRecursiveSearch()
+                .doIncludeAll()
+                .withMaxClassLimit(DEFAULT_MAX_CLASS_LIMIT);
     }
 
     /**
@@ -99,94 +87,111 @@ public class ClassCriteria {
      * <li>Include enums</li>
      * <li>Include annotations</li>
      * <li>Include member classes</li>
+     * <li>Max class limit set to <b>ClassCriteria.DEFAULT_MAX_CLASS_LIMIT</b></li>
      * </ul>
      *
      * @return the criteria builder.
+     * @see no.acntech.common.test.ClassCriteria#DEFAULT_MAX_CLASS_LIMIT
      */
     public static Builder createRecursive() {
-        return new Builder(new ClassCriteria(Boolean.TRUE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE, Boolean.FALSE));
+        return new Builder(new ClassCriteria())
+                .doRecursiveSearch()
+                .doIncludeAll()
+                .withMaxClassLimit(DEFAULT_MAX_CLASS_LIMIT);
     }
 
+    /**
+     * Builder class for <b>ClassCriteria</b>.
+     */
     public static class Builder {
 
         private ClassCriteria classCriteria;
 
         private Builder(ClassCriteria classCriteria) {
+            if (classCriteria == null) {
+                throw new IllegalArgumentException("Class criteria is null");
+            }
             this.classCriteria = classCriteria;
         }
 
+        public Builder withMaxClassLimit(int maxClassLimit) {
+            classCriteria.maxClassLimit = maxClassLimit;
+            return this;
+        }
+
         public Builder doRecursiveSearch() {
-            classCriteria.setRecursiveSearch(Boolean.TRUE);
+            classCriteria.recursiveSearch = Boolean.TRUE;
             return this;
         }
 
         public Builder doExcludeInterfaces() {
-            classCriteria.setExcludeInterfaces(Boolean.TRUE);
+            classCriteria.excludeInterfaces = Boolean.TRUE;
             return this;
         }
 
         public Builder doExcludeEnums() {
-            classCriteria.setExcludeEnums(Boolean.TRUE);
+            classCriteria.excludeEnums = Boolean.TRUE;
             return this;
         }
 
         public Builder doExcludeAnnotations() {
-            classCriteria.setExcludeAnnotations(Boolean.TRUE);
+            classCriteria.excludeAnnotations = Boolean.TRUE;
             return this;
         }
 
         public Builder doExcludeMemberClasses() {
-            classCriteria.setExcludeMemberClasses(Boolean.TRUE);
+            classCriteria.excludeMemberClasses = Boolean.TRUE;
             return this;
         }
 
         public Builder doExcludePaths(String... pathRegexes) {
-            if (pathRegexes == null) {
-                classCriteria.setExcludePathRegex(new HashSet<String>());
-            } else {
-                classCriteria.setExcludePathRegex(new HashSet<>(Arrays.asList(pathRegexes)));
+            if (classCriteria.excludePathRegex == null) {
+                classCriteria.excludePathRegex = new HashSet<>();
+            }
+            if (pathRegexes != null) {
+                classCriteria.excludePathRegex.addAll(Arrays.asList(pathRegexes));
             }
             return this;
         }
 
         public Builder doNonRecursiveSearch() {
-            classCriteria.setRecursiveSearch(Boolean.FALSE);
+            classCriteria.recursiveSearch = Boolean.FALSE;
             return this;
         }
 
         public Builder doIncludeInterfaces() {
-            classCriteria.setExcludeInterfaces(Boolean.FALSE);
+            classCriteria.excludeInterfaces = Boolean.FALSE;
             return this;
         }
 
         public Builder doIncludeEnums() {
-            classCriteria.setExcludeEnums(Boolean.FALSE);
+            classCriteria.excludeEnums = Boolean.FALSE;
             return this;
         }
 
         public Builder doIncludeAnnotations() {
-            classCriteria.setExcludeAnnotations(Boolean.FALSE);
+            classCriteria.excludeAnnotations = Boolean.FALSE;
             return this;
         }
 
         public Builder doIncludeMemberClasses() {
-            classCriteria.setExcludeMemberClasses(Boolean.FALSE);
+            classCriteria.excludeMemberClasses = Boolean.FALSE;
             return this;
         }
 
         public Builder doExcludeAll() {
-            classCriteria.setExcludeInterfaces(Boolean.TRUE);
-            classCriteria.setExcludeEnums(Boolean.TRUE);
-            classCriteria.setExcludeAnnotations(Boolean.TRUE);
-            classCriteria.setExcludeMemberClasses(Boolean.TRUE);
+            classCriteria.excludeInterfaces = Boolean.TRUE;
+            classCriteria.excludeEnums = Boolean.TRUE;
+            classCriteria.excludeAnnotations = Boolean.TRUE;
+            classCriteria.excludeMemberClasses = Boolean.TRUE;
             return this;
         }
 
         public Builder doIncludeAll() {
-            classCriteria.setExcludeInterfaces(Boolean.FALSE);
-            classCriteria.setExcludeEnums(Boolean.FALSE);
-            classCriteria.setExcludeAnnotations(Boolean.FALSE);
-            classCriteria.setExcludeMemberClasses(Boolean.FALSE);
+            classCriteria.excludeInterfaces = Boolean.FALSE;
+            classCriteria.excludeEnums = Boolean.FALSE;
+            classCriteria.excludeAnnotations = Boolean.FALSE;
+            classCriteria.excludeMemberClasses = Boolean.FALSE;
             return this;
         }
 

@@ -99,6 +99,10 @@ public final class ExceptionTester {
                 fail("Exception was not thrown");
             } catch (Throwable e) {
                 assertThat("Exception is not of expected type", e, instanceOf(throwable));
+                LOGGER.debug("Exception message: {}", e.getMessage());
+                LOGGER.debug("Exception localized message: {}", e.getLocalizedMessage());
+                Throwable cause = e.getCause();
+                LOGGER.debug("Exception cause: {}", cause == null ? "N/A" : cause.getClass().getName());
             }
         } else {
             LOGGER.warn("Constructor is null");
