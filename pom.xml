@@ -4,6 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <!-- PROJECT -->
     <groupId>no.acntech.common</groupId>
     <artifactId>acntech-common</artifactId>
     <packaging>pom</packaging>
@@ -13,6 +14,7 @@
     <description>AcnTech common utils and tools</description>
     <url>https://github.com/acntech/acntech-common</url>
 
+    <!-- LICENSES -->
     <licenses>
         <license>
             <name>The Apache Software License, Version 2.0</name>
@@ -20,8 +22,10 @@
         </license>
     </licenses>
 
+    <!-- DEVELOPERS -->
     <developers>
         <developer>
+            <id>thomas.johansen</id>
             <name>Thomas Johansen</name>
             <email>thomas@acntech.no</email>
             <organization>AcnTech</organization>
@@ -29,6 +33,7 @@
         </developer>
     </developers>
 
+    <!-- SCM -->
     <scm>
         <connection>scm:git:https://github.com/acntech/acntech-common.git</connection>
         <developerConnection>scm:git:ssh://github.com:acntech/acntech-common.git</developerConnection>
@@ -49,8 +54,8 @@
 
         <!-- Dependencies -->
         <!-- Logging -->
-        <slf4j.version>1.7.10</slf4j.version>
-        <logback.version>1.1.2</logback.version>
+        <slf4j.version>1.7.25</slf4j.version>
+        <logback.version>1.2.3</logback.version>
         <!-- Testing -->
         <junit.version>4.12</junit.version>
         <hamcrest.version>1.3</hamcrest.version>
@@ -69,6 +74,7 @@
         <module>acntech-test-tools</module>
     </modules>
 
+    <!-- DEPENDENCIES -->
     <dependencyManagement>
         <dependencies>
             <!-- Logging -->
@@ -115,7 +121,12 @@
         </dependencies>
     </dependencyManagement>
 
+    <!-- BUILD -->
     <build>
+        <!-- PLUGINS -->
+        <plugins>
+        </plugins>
+
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -184,14 +195,16 @@
         </pluginManagement>
     </build>
 
+    <!-- PLUGINS -->
     <profiles>
         <profile>
-            <id>acntech</id>
+            <id>acntech-nexus</id>
 
+            <!-- REPOSITORIES -->
             <repositories>
                 <repository>
-                    <id>acntech-releases</id>
-                    <name>AcnTech Releases</name>
+                    <id>acntech-nexus-releases</id>
+                    <name>AcnTech Nexus Releases</name>
                     <url>https://nexus.acntech.no/content/repositories/releases</url>
                     <releases>
                         <enabled>true</enabled>
@@ -204,8 +217,8 @@
                 </repository>
 
                 <repository>
-                    <id>acntech-snapshots</id>
-                    <name>AcnTech Snapshots</name>
+                    <id>acntech-nexus-snapshots</id>
+                    <name>AcnTech Nexus Snapshots</name>
                     <url>https://nexus.acntech.no/content/repositories/snapshots</url>
                     <releases>
                         <enabled>false</enabled>
@@ -218,29 +231,33 @@
                 </repository>
             </repositories>
 
-            <distributionManagement>
-                <repository>
-                    <id>acntech</id>
-                    <name>AcnTech Releases</name>
-                    <url>https://nexus.acntech.no/content/repositories/releases</url>
-                </repository>
-
-                <snapshotRepository>
-                    <id>acntech</id>
-                    <name>AcnTech Snapshots</name>
-                    <url>https://nexus.acntech.no/content/repositories/snapshots</url>
-                </snapshotRepository>
-            </distributionManagement>
-
+            <!-- PLUGIN REPOSITORIES -->
             <pluginRepositories>
                 <pluginRepository>
-                    <id>acntech</id>
-                    <name>AcnTech Plugins</name>
+                    <id>acntech-nexus-plugins</id>
+                    <name>AcnTech Nexus Plugins</name>
                     <url>https://nexus.acntech.no/content/groups/public</url>
                 </pluginRepository>
             </pluginRepositories>
 
+            <!-- DISTRIBUTION MANAGEMENT -->
+            <distributionManagement>
+                <repository>
+                    <id>acntech-nexus-releases</id>
+                    <name>AcnTech Nexus Releases</name>
+                    <url>https://nexus.acntech.no/content/repositories/releases</url>
+                </repository>
+
+                <snapshotRepository>
+                    <id>acntech-nexus-snapshots</id>
+                    <name>AcnTech Nexus Snapshots</name>
+                    <url>https://nexus.acntech.no/content/repositories/snapshots</url>
+                </snapshotRepository>
+            </distributionManagement>
+
+            <!-- BUILD -->
             <build>
+                <!-- PLUGINS -->
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -255,13 +272,17 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
+                        <configuration>
+                            <keyname>${gpg.keyname}</keyname>
+                            <passphraseServerId>${gpg.keyname}</passphraseServerId>
+                        </configuration>
                     </plugin>
 
                     <plugin>
                         <groupId>org.sonatype.plugins</groupId>
                         <artifactId>nexus-staging-maven-plugin</artifactId>
                         <configuration>
-                            <serverId>acntech</serverId>
+                            <serverId>acntech-nexus</serverId>
                             <nexusUrl>https://nexus.acntech.no</nexusUrl>
                             <skipStaging>true</skipStaging>
                         </configuration>
@@ -273,6 +294,7 @@
         <profile>
             <id>ossrh</id>
 
+            <!-- DISTRIBUTION MANAGEMENT -->
             <distributionManagement>
                 <repository>
                     <id>ossrh</id>
@@ -285,7 +307,9 @@
                 </snapshotRepository>
             </distributionManagement>
 
+            <!-- BUILD -->
             <build>
+                <!-- PLUGINS -->
                 <plugins>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
@@ -300,6 +324,10 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
+                        <configuration>
+                            <keyname>${gpg.keyname}</keyname>
+                            <passphraseServerId>${gpg.keyname}</passphraseServerId>
+                        </configuration>
                     </plugin>
 
                     <plugin>
