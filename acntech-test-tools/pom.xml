@@ -4,6 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
+    <!-- PROJECT -->
     <parent>
         <artifactId>acntech-common</artifactId>
         <groupId>no.acntech.common</groupId>
@@ -12,9 +13,13 @@
 
     <artifactId>acntech-test-tools</artifactId>
 
-    <name>AcnTech Test Tools</name>
+    <name>AcnTech Common Test Tools</name>
     <description>AcnTech tools for testing</description>
     <url>https://github.com/acntech/acntech-common/acntech-test-tools</url>
+
+    <!-- PROPERTIES -->
+    <properties>
+    </properties>
 
     <!-- DEPENDENCIES -->
     <dependencies>
@@ -45,7 +50,13 @@
         <dependency>
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
-            <scope>compile</scope>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>org.easymock</groupId>
+            <artifactId>easymock</artifactId>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 </project>

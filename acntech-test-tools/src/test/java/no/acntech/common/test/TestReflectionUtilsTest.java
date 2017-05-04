@@ -1,39 +1,272 @@
 package no.acntech.common.test;
 
-import no.acntech.common.test.objects.ObjectType;
-import org.junit.Test;
+import java.lang.reflect.Constructor;
+import java.util.List;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Rule;
+import org.junit.Test;
+import org.junit.rules.ExpectedException;
+
+import no.acntech.common.test.testsubject.DummyFinalObject;
+import no.acntech.common.test.testsubject.DummyObjectWithNoDefaultConstructor;
+import no.acntech.common.test.testsubject.DummyObjectWithPrimitives;
+import no.acntech.common.test.testsubject.subpackage.DummySubObject;
+
+import static org.hamcrest.CoreMatchers.is;
+import static org.hamcrest.CoreMatchers.notNullValue;
+import static org.hamcrest.CoreMatchers.nullValue;
+import static org.hamcrest.Matchers.empty;
+import static org.hamcrest.Matchers.hasSize;
+import static org.junit.Assert.assertThat;
 
 public class TestReflectionUtilsTest {
 
-    @Test
-    public void testSetInternalFieldUsingNull() throws Exception {
-        try {
-            TestReflectionUtils.setInternalField(null, "whatever", "whatever");
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
-            fail("Should throw exception");
-        } catch (Exception e) {
-            assertTrue("Exception is of wrong type", e instanceof IllegalArgumentException);
-        }
+    @Test
+    public void testSetInternalFieldTargetIsNull() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+
+        TestReflectionUtils.setInternalField(null, "whatever", "whatever");
+    }
+
+    @Test
+    public void testSetInternalFieldNoSuchField() throws Exception {
+        thrown.expect(NoSuchFieldException.class);
+        DummyObjectWithPrimitives subject = new DummyObjectWithPrimitives();
+
+        TestReflectionUtils.setInternalField(subject, "whatever", "whatever");
     }
 
     @Test
     public void testSetInternalField() throws Exception {
-        ObjectType objectType = new ObjectType();
-        TestReflectionUtils.setInternalField(objectType, "str", "1337");
+        DummyObjectWithPrimitives subject = new DummyObjectWithPrimitives();
 
-        assertEquals("Field value is different in getter", "1337", objectType.getStr());
+        TestReflectionUtils.setInternalField(subject, "str", "1337");
+
+        assertThat("Field value is different in getter", subject.getStr(), is("1337"));
     }
 
     @Test
-    public void testFindClassesInPackage() throws Exception {
-        Class<?>[] classes = TestReflectionUtils.findClasses(TestReflectionUtils.class.getPackage(), Boolean.TRUE);
+    public void testInvokePrivateMethodTargetIsNull() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
 
-        assertNotNull("Package classes are null", classes);
-        assertTrue("No classes found in package", classes.length > 0);
+        TestReflectionUtils.invokePrivateMethod(null, "whatever");
+    }
+
+    @Test
+    public void testInvokePrivateMethodNoSuchMethod() throws Exception {
+        thrown.expect(NoSuchMethodException.class);
+        DummyObjectWithPrimitives subject = new DummyObjectWithPrimitives();
+
+        TestReflectionUtils.invokePrivateMethod(subject, "whatever");
+    }
+
+    @Test
+    public void testInvokePrivateMethodSetter() throws Exception {
+        DummyObjectWithPrimitives subject = new DummyObjectWithPrimitives();
+
+        assertThat("Value is already set", subject.getStr(), nullValue());
+
+        Object returnObject = TestReflectionUtils.invokePrivateMethod(subject, "setStr", "1337");
+
+        assertThat("Return object is not null", returnObject, nullValue());
+        assertThat("Value not set by setter", subject.getStr(), is("1337"));
+    }
+
+    @Test
+    public void testInvokePrivateMethodGetter() throws Exception {
+        DummyObjectWithPrimitives subject = new DummyObjectWithPrimitives();
+        subject.setStr("1337");
+
+        Object returnObject = TestReflectionUtils.invokePrivateMethod(subject, "getStr");
+
+        assertThat("Return object is null", returnObject, notNullValue());
+        assertThat("Value not correct", returnObject.toString(), is("1337"));
+    }
+
+    @Test
+    public void testIsFinalClassWithFinalClass() {
+        assertThat(TestReflectionUtils.isFinalClass(DummyFinalObject.class), is(Boolean.TRUE));
+    }
+
+    @Test
+    public void testIsFinalClassWithNonFinalClass() {
+        assertThat(TestReflectionUtils.isFinalClass(DummyObjectWithPrimitives.class), is(Boolean.FALSE));
+    }
+
+    @Test
+    public void testCreateBeanTargetIsNull() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+
+        TestReflectionUtils.createBean((Class<Object>) null);
+    }
+
+    @Test
+    public void testCreateBeanConstructorIsNull() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+
+        TestReflectionUtils.createBean((Constructor<Object>) null);
+    }
+
+    @Test
+    public void testCreateBeanWithDefaultConstructor() throws Exception {
+        DummyObjectWithPrimitives subject = TestReflectionUtils.createBean(DummyObjectWithPrimitives.class);
+
+        assertThat("Object is null", subject, notNullValue());
+    }
+
+    @Test
+    public void testCreateBeanWithNoDefaultConstructorShouldThrowNoSuchConstructorException() throws Exception {
+        thrown.expect(NoSuchConstructorException.class);
+
+        TestReflectionUtils.createBean(DummyObjectWithNoDefaultConstructor.class);
+    }
+
+    @Test
+    public void testCreateBeanWithNoDefaultConstructor() throws Exception {
+        DummyObjectWithNoDefaultConstructor object = TestReflectionUtils.createBean(DummyObjectWithNoDefaultConstructor.class, "1337");
+
+        assertThat("Object is null", object, notNullValue());
+        assertThat("Value not correct", object.getStr(), is("1337"));
+    }
+
+    @Test
+    public void testFindClassesPackageIsNull() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+
+        TestReflectionUtils.findClasses((Package) null, ClassCriteria.createDefault().build());
+    }
+
+    @Test
+    public void testFindClassesPackageNameIsNull() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+
+        TestReflectionUtils.findClasses((String) null, ClassCriteria.createDefault().build());
+    }
+
+    @Test
+    public void testFindClassesClassCriteriaIsNull() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+
+        TestReflectionUtils.findClasses(DummyObjectWithPrimitives.class.getPackage(), null);
+    }
+
+    @Test
+    public void testFindClassesInPackageDefaultSearchCriteria() throws Exception {
+        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObjectWithPrimitives.class.getPackage(), ClassCriteria.createDefault().build());
+
+        assertThat("Package classes are null", classes, notNullValue());
+        assertThat("Wrong number og classes found in package", classes.length, is(9));
+    }
+
+    @Test
+    public void testFindClassesInPackageExcludeInterfaces() throws Exception {
+        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObjectWithPrimitives.class.getPackage(), ClassCriteria.createDefault().doExcludeInterfaces().build());
+
+        assertThat("Package classes are null", classes, notNullValue());
+        assertThat("Wrong number og classes found in package", classes.length, is(7)); // Annotations are also interfaces
+    }
+
+    @Test
+    public void testFindClassesInPackageExcludeEnums() throws Exception {
+        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObjectWithPrimitives.class.getPackage(), ClassCriteria.createDefault().doExcludeEnums().build());
+
+        assertThat("Package classes are null", classes, notNullValue());
+        assertThat("Wrong number og classes found in package", classes.length, is(8));
+    }
+
+    @Test
+    public void testFindClassesInPackageExcludeAnnotations() throws Exception {
+        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObjectWithPrimitives.class.getPackage(), ClassCriteria.createDefault().doExcludeAnnotations().build());
+
+        assertThat("Package classes are null", classes, notNullValue());
+        assertThat("Wrong number og classes found in package", classes.length, is(8));
+    }
+
+    @Test
+    public void testFindClassesInPackageExcludeMemberClasses() throws Exception {
+        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObjectWithPrimitives.class.getPackage(), ClassCriteria.createDefault().doExcludeMemberClasses().build());
+
+        assertThat("Package classes are null", classes, notNullValue());
+        assertThat("Wrong number og classes found in package", classes.length, is(8));
+    }
+
+    @Test
+    public void testFindClassesInPackageExcludeAll() throws Exception {
+        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObjectWithPrimitives.class.getPackage(), ClassCriteria.createDefault().doExcludeAll().build());
+
+        assertThat("Package classes are null", classes, notNullValue());
+        assertThat("Wrong number og classes found in package", classes.length, is(5));
+    }
+
+    @Test
+    public void testFindClassesInPackageRecursiveSearchCriteria() throws Exception {
+        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObjectWithPrimitives.class.getPackage(), ClassCriteria.createRecursive().build());
+
+        assertThat("Package classes are null", classes, notNullValue());
+        assertThat("Wrong number og classes found in package", classes.length, is(11));
+    }
+
+    @Test
+    public void testFindClassesInPackageExcludeMavenTestClasses() throws Exception {
+        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObjectWithPrimitives.class.getPackage(), ClassCriteria.createDefault().doExcludePaths("test-classes").build());
+
+        assertThat("Package classes are null", classes, notNullValue());
+        assertThat("Array of classes is not empty", classes.length, is(0));
+    }
+
+    @Test
+    public void testFindClassesInPackageRecursiveSearchCriteriaWithLimit() throws Exception {
+        Class<?>[] classes = TestReflectionUtils.findClasses(DummyObjectWithPrimitives.class.getPackage(), ClassCriteria.createRecursive().withMaxClassLimit(7).build());
+
+        assertThat("Package classes are null", classes, notNullValue());
+        assertThat("Wrong number og classes found in package", classes.length, is(7));
+    }
+
+    @Test
+    public void testFindGettersAndSettersClassIsNull() throws Exception {
+        thrown.expect(IllegalArgumentException.class);
+
+        TestReflectionUtils.findGettersAndSetters(null);
+    }
+
+    @Test
+    public void testFindGettersAndSettersClassWithoutFields() throws Exception {
+        List<GetterSetter> gettersAndSetters = TestReflectionUtils.findGettersAndSetters(DummySubObject.class);
+
+        assertThat("List is null", gettersAndSetters, notNullValue());
+        assertThat("List of getters and setters is not empty", gettersAndSetters, is(empty()));
+    }
+
+    @Test
+    public void testFindGettersAndSetters() throws Exception {
+        List<GetterSetter> gettersAndSetters = TestReflectionUtils.findGettersAndSetters(DummyObjectWithPrimitives.class);
+
+        assertThat("List is null", gettersAndSetters, notNullValue());
+        assertThat("List of getters and setters is not empty", gettersAndSetters, hasSize(16));
+    }
+
+    @Test
+    public void testFindGettersAndSettersSkippingSome() throws Exception {
+        List<GetterSetter> gettersAndSetters = TestReflectionUtils.findGettersAndSetters(DummyObjectWithPrimitives.class, FieldCriteria
+                .createDefault()
+                .doExcludeFields("bool2", "chr")
+                .build());
+
+        assertThat("List is null", gettersAndSetters, notNullValue());
+        assertThat("List of getters and setters is not empty", gettersAndSetters, hasSize(14));
+    }
+
+    @Test
+    public void testFindGetters() throws Exception {
+        List<Getter> getters = TestReflectionUtils.findGetters(DummyObjectWithNoDefaultConstructor.class, FieldCriteria
+                .createDefault()
+                .doExcludeFields("class")
+                .build());
+
+        assertThat("List is null", getters, notNullValue());
+        assertThat("List of getters and setters is not empty", getters, hasSize(1));
     }
 }
