@@ -1,23 +1,21 @@
 package no.acntech.common.test;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
-import org.easymock.EasyMock;
-import org.mockito.Mockito;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 public final class TestTypeFactory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(TestTypeFactory.class);
-    private static final List<BasicType> BASIC_TYPES = new ArrayList<>();
+    private static final List<BasicType> TYPES = new ArrayList<>();
 
     static {
-        populateBasicTypes();
+        populateTypes();
     }
 
     private TestTypeFactory() {
@@ -26,10 +24,10 @@ public final class TestTypeFactory {
     /**
      * Adds a custom type to the type factory for use with the test utils.
      *
-     * @param basicType Custom type to add.
+     * @param type Custom type to add.
      */
-    public static void addBasicType(BasicType basicType) {
-        BASIC_TYPES.add(basicType);
+    public static void addBasicType(BasicType type) {
+        TYPES.add(type);
     }
 
     /**
@@ -46,6 +44,11 @@ public final class TestTypeFactory {
         }
 
         T object = createBasicType(clazz);
+        if (object != null) {
+            return object;
+        }
+
+        object = AdvancedTestTypeFactory.createType(clazz);
         if (object != null) {
             return object;
         }
@@ -70,9 +73,9 @@ public final class TestTypeFactory {
 
     @SuppressWarnings("unchecked")
     private static <T> T createBasicType(Class<T> clazz) {
-        for (BasicType basicType : BASIC_TYPES) {
-            if (basicType.isType(clazz)) {
-                return (T) basicType.getType(clazz);
+        for (BasicType type : TYPES) {
+            if (type.isType(clazz)) {
+                return (T) type.getType(clazz);
             }
         }
         return null;
@@ -82,11 +85,11 @@ public final class TestTypeFactory {
         if (TestReflectionUtils.isFinalClass(clazz)) {
             LOGGER.warn("Can not mock final classes with Mockito");
             return null;
-        } else if (!TestReflectionUtils.isClassExists(Mockito.class, TestTypeFactory.class.getClassLoader())) {
+        } else if (!TestReflectionUtils.isClassExists(org.mockito.Mockito.class, TestTypeFactory.class.getClassLoader())) {
             LOGGER.warn("Can not find Mockito on classpath");
             return null;
         } else {
-            return Mockito.mock(clazz);
+            return org.mockito.Mockito.mock(clazz);
         }
     }
 
@@ -94,11 +97,11 @@ public final class TestTypeFactory {
         if (TestReflectionUtils.isFinalClass(clazz)) {
             LOGGER.warn("Can not mock final classes with EasyMock");
             return null;
-        } else if (!TestReflectionUtils.isClassExists(EasyMock.class, TestTypeFactory.class.getClassLoader())) {
+        } else if (!TestReflectionUtils.isClassExists(org.easymock.EasyMock.class, TestTypeFactory.class.getClassLoader())) {
             LOGGER.warn("Can not find EasyMock on classpath");
             return null;
         } else {
-            return EasyMock.mock(clazz);
+            return org.easymock.EasyMock.mock(clazz);
         }
     }
 
@@ -123,7 +126,7 @@ public final class TestTypeFactory {
         return argClasses;
     }
 
-    private static void populateBasicTypes() {
+    private static void populateTypes() {
 
         // Object
         addBasicType(new BasicType<Object>() {
