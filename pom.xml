@@ -43,7 +43,7 @@
     <!-- PROPERTIES -->
     <properties>
         <!-- Common -->
-        <java.version>1.7</java.version>
+        <java.version>1.8</java.version>
         <project.encoding>UTF-8</project.encoding>
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
@@ -53,14 +53,16 @@
         <downloadJavadocs>true</downloadJavadocs>
 
         <!-- Dependencies -->
-        <!-- Logging -->
-        <slf4j.version>1.7.25</slf4j.version>
-        <logback.version>1.2.3</logback.version>
         <!-- Testing -->
         <junit.version>4.12</junit.version>
         <hamcrest.version>1.3</hamcrest.version>
         <mockito.version>1.10.19</mockito.version>
         <easymock.version>3.4</easymock.version>
+        <!-- Logging -->
+        <slf4j.version>1.7.25</slf4j.version>
+        <logback.version>1.2.3</logback.version>
+        <!-- Frameworks -->
+        <joda-time.version>2.9.9</joda-time.version>
 
         <!-- Maven Plugins -->
         <maven-source-plugin.version>3.0.1</maven-source-plugin.version>
@@ -77,19 +79,6 @@
     <!-- DEPENDENCIES -->
     <dependencyManagement>
         <dependencies>
-            <!-- Logging -->
-            <dependency>
-                <groupId>org.slf4j</groupId>
-                <artifactId>slf4j-api</artifactId>
-                <version>${slf4j.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>ch.qos.logback</groupId>
-                <artifactId>logback-classic</artifactId>
-                <version>${logback.version}</version>
-            </dependency>
-
             <!-- Testing -->
             <dependency>
                 <groupId>junit</groupId>
@@ -117,6 +106,26 @@
                 <artifactId>easymock</artifactId>
                 <version>${easymock.version}</version>
                 <scope>test</scope>
+            </dependency>
+
+            <!-- Logging -->
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>ch.qos.logback</groupId>
+                <artifactId>logback-classic</artifactId>
+                <version>${logback.version}</version>
+            </dependency>
+
+            <!-- Frameworks -->
+            <dependency>
+                <groupId>joda-time</groupId>
+                <artifactId>joda-time</artifactId>
+                <version>${joda-time.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
