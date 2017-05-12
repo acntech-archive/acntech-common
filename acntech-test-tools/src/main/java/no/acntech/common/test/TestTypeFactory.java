@@ -85,7 +85,7 @@ public final class TestTypeFactory {
         if (TestReflectionUtils.isFinalClass(clazz)) {
             LOGGER.warn("Can not mock final classes with Mockito");
             return null;
-        } else if (!TestReflectionUtils.isClassExists(org.mockito.Mockito.class, TestTypeFactory.class.getClassLoader())) {
+        } else if (!TestReflectionUtils.isClassExists("org.mockito.Mockito", TestTypeFactory.class.getClassLoader())) {
             LOGGER.warn("Can not find Mockito on classpath");
             return null;
         } else {
@@ -97,7 +97,7 @@ public final class TestTypeFactory {
         if (TestReflectionUtils.isFinalClass(clazz)) {
             LOGGER.warn("Can not mock final classes with EasyMock");
             return null;
-        } else if (!TestReflectionUtils.isClassExists(org.easymock.EasyMock.class, TestTypeFactory.class.getClassLoader())) {
+        } else if (!TestReflectionUtils.isClassExists("org.easymock.EasyMock", TestTypeFactory.class.getClassLoader())) {
             LOGGER.warn("Can not find EasyMock on classpath");
             return null;
         } else {

@@ -46,7 +46,7 @@ final class AdvancedTestTypeFactory {
     }
 
     private static void populateJavaTimeTypes() {
-        if (TestReflectionUtils.isClassExists(java.time.LocalDate.class, AdvancedTestTypeFactory.class.getClassLoader())) {
+        if (TestReflectionUtils.isClassExists("java.time.LocalDate", AdvancedTestTypeFactory.class.getClassLoader())) {
 
             // Time
             addType(new BasicType<java.time.LocalTime>() {
@@ -145,7 +145,7 @@ final class AdvancedTestTypeFactory {
     }
 
     private static void populateJodaTimeTypes() {
-        if (TestReflectionUtils.isClassExists(org.joda.time.LocalDate.class, AdvancedTestTypeFactory.class.getClassLoader())) {
+        if (TestReflectionUtils.isClassExists("org.joda.time.LocalDate", AdvancedTestTypeFactory.class.getClassLoader())) {
 
             // Time
             addType(new BasicType<org.joda.time.LocalTime>() {
