@@ -8,7 +8,7 @@
     <parent>
         <groupId>no.acntech.common</groupId>
         <artifactId>acntech-common</artifactId>
-        <version>1.1.1</version>
+        <version>1.1.2-SNAPSHOT</version>
     </parent>
 
     <artifactId>acntech-test-tools</artifactId>
