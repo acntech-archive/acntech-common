@@ -1,14 +1,14 @@
 package no.acntech.common.test;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.beans.IntrospectionException;
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.List;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -18,7 +18,8 @@ public final class JavaBeanTester {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JavaBeanTester.class);
     private static final String GENERAL_EXCEPTION_MESSAGE_FORMAT = "An exception was thrown during test of field %s on bean of type %s";
-    private static final String OBJECT_INSTANTIATION_EXCEPTION_MESSAGE_FORMAT = "Could not create object for class %s. Add custom types by using TestTypeFactory.addBasicType(BasicType basicType)";
+    private static final String OBJECT_INSTANTIATION_EXCEPTION_MESSAGE_FORMAT = "Could not create object for field %s of type %s on bean of type %s.\n" +
+            "Add custom types by using no.acntech.common.testTestTypeFactory.addBasicType(BasicType basicType)";
 
     private JavaBeanTester() {
     }
@@ -167,9 +168,10 @@ public final class JavaBeanTester {
         final PropertyDescriptor descriptor = getterSetter.getDescriptor();
         final Method getterMethod = getterSetter.getGetter();
         final Method setterMethod = getterSetter.getSetter();
+        final Class<?> returnType = getterMethod.getReturnType();
 
         try {
-            final Object expectedType = TestTypeFactory.createType(getterMethod.getReturnType());
+            final Object expectedType = TestTypeFactory.createType(returnType);
 
             final Object bean = TestReflectionUtils.createBean(clazz);
 
@@ -180,7 +182,7 @@ public final class JavaBeanTester {
             assertThat("Failed when testing field " + descriptor.getName(), expectedType, is(actualType));
 
         } catch (ObjectInstantiationException e) {
-            String error = String.format(OBJECT_INSTANTIATION_EXCEPTION_MESSAGE_FORMAT, clazz.getName());
+            String error = String.format(OBJECT_INSTANTIATION_EXCEPTION_MESSAGE_FORMAT, descriptor.getName(), returnType.getName(), clazz.getName());
             LOGGER.error(error, e);
             fail(error);
         } catch (Exception e) {
@@ -193,17 +195,18 @@ public final class JavaBeanTester {
     private static void testConstructorAndGetter(final Class<?> clazz, Getter getter) {
         final PropertyDescriptor descriptor = getter.getDescriptor();
         final Method getterMethod = getter.getGetter();
+        final Class<?> returnType = getterMethod.getReturnType();
 
         try {
-            final Object expectedType = TestTypeFactory.createType(getterMethod.getReturnType());
+            final Object expectedType = TestTypeFactory.createType(returnType);
 
-            Constructor<?>[] constructors = TestReflectionUtils.findConstructorsWithParamMatch(clazz, getterMethod.getReturnType());
+            Constructor<?>[] constructors = TestReflectionUtils.findConstructorsWithParamMatch(clazz, returnType);
 
             for (final Constructor<?> constructor : constructors) {
                 testConstructorAndGetter(constructor, getter, expectedType);
             }
         } catch (ObjectInstantiationException e) {
-            String error = String.format(OBJECT_INSTANTIATION_EXCEPTION_MESSAGE_FORMAT, clazz.getName());
+            String error = String.format(OBJECT_INSTANTIATION_EXCEPTION_MESSAGE_FORMAT, descriptor.getName(), returnType.getName(), clazz.getName());
             LOGGER.error(error, e);
             fail(error);
         } catch (Exception e) {

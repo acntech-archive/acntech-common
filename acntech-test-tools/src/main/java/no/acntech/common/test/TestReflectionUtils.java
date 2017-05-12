@@ -1,5 +1,8 @@
 package no.acntech.common.test;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
@@ -17,9 +20,6 @@ import java.util.Enumeration;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class TestReflectionUtils {
 
@@ -87,12 +87,20 @@ public final class TestReflectionUtils {
             throw new IllegalArgumentException("Class is null");
         }
 
+        return isClassExists(clazz.getName(), classLoader);
+    }
+
+    static boolean isClassExists(String className, final ClassLoader classLoader) {
+        if (className == null) {
+            throw new IllegalArgumentException("Class name is null");
+        }
+
         if (classLoader == null) {
             throw new IllegalArgumentException("ClassLoader is null");
         }
 
         try {
-            Class.forName(clazz.getName(), Boolean.FALSE, classLoader);
+            Class.forName(className, Boolean.FALSE, classLoader);
             return Boolean.TRUE;
         } catch (ClassNotFoundException e) {
             return Boolean.FALSE;
